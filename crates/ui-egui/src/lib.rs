@@ -1,4 +1,4 @@
-//! ArtCraft Launcher's interface: the Craft App Suite as a grid of cards or a table, with
+//! Uni Launcher's interface: the Uniphar Indústria Farmacêutica as a grid of cards or a table, with
 //! install, update, open and remove, shared by the desktop and web builds.
 //!
 //! The UI is thin: it draws [`model::AppEntry`]s and sends
@@ -31,6 +31,7 @@ mod motion;
 mod notes;
 pub mod settings;
 mod settings_dialog;
+mod sidebar;
 mod sheet;
 pub mod theme;
 mod views;

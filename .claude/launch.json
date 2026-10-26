@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "unitexto-web",
+      "runtimeExecutable": "trunk",
+      "runtimeArgs": ["serve", "--config", "apps/artcraft-launcher-web/Trunk.toml"],
+      "port": 8766
+    }
+  ]
+}

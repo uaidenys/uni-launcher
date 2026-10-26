@@ -12,7 +12,7 @@ pub struct Paths {
     pub cache: PathBuf,
 }
 
-const DIR: &str = if cfg!(any(target_os = "macos", target_os = "windows")) { "ArtCraft Launcher" } else { "artcraft-launcher" };
+const DIR: &str = if cfg!(any(target_os = "macos", target_os = "windows")) { "Uni Launcher" } else { "artcraft-launcher" };
 
 impl Paths {
     pub fn new() -> Result<Self, String> {
@@ -37,12 +37,12 @@ impl Paths {
         self.cache.join("releases.json")
     }
 
-    /// The last answer from ArtCraft's release feed, for an instant first paint and as a fallback.
+    /// The last answer from Uni Launcher's release feed, for an instant first paint and as a fallback.
     pub fn feed_cache(&self) -> PathBuf {
         self.cache.join("feed.json")
     }
 
-    /// How long to hold off calling ArtCraft's API (after failures or HTTP 429), across restarts.
+    /// How long to hold off calling Uni Launcher's API (after failures or HTTP 429), across restarts.
     pub fn feed_throttle(&self) -> PathBuf {
         self.cache.join("feed-throttle.json")
     }

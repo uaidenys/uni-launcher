@@ -64,7 +64,7 @@ struct Shared {
     /// A detection pass is running; another request waits for the next one.
     detecting: AtomicBool,
     last_check: Mutex<Option<i64>>,
-    /// The newer ArtCraft Launcher release, once a check has found one.
+    /// The newer Uni Launcher release, once a check has found one.
     launcher_release: Mutex<Option<Release>>,
     /// How this launcher is installed, when it can replace itself. Worked out on the check thread
     /// just before a newer launcher is announced: finding out can ask the host's Flatpak, which
@@ -80,7 +80,7 @@ struct Shared {
     feed_failures: Mutex<u32>,
     /// When the feed last answered (Unix seconds).
     feed_ok_at: Mutex<Option<i64>>,
-    /// How often ArtCraft's API may be called.
+    /// How often Uni Launcher's API may be called.
     feed_throttle: Mutex<FeedThrottle>,
     /// Apps whose details pictures are on their way (a second request meanwhile does nothing).
     pictures_busy: Mutex<std::collections::HashSet<&'static str>>,
@@ -207,7 +207,7 @@ impl NativeBackend {
         });
     }
 
-    /// Looks up the latest releases: ArtCraft's release feed first (one request for every app),
+    /// Looks up the latest releases: Uni Launcher's release feed first (one request for every app),
     /// GitHub for anything the feed can't vouch for (apps it doesn't list, entries more than a
     /// day old, or no answer at all), at most once an hour per app unless `force`.
     fn check(&self, force: bool) {
@@ -255,13 +255,14 @@ impl NativeBackend {
                             let Some(app) = queue.lock().unwrap_or_else(PoisonError::into_inner).pop() else { break };
                             let (latest, from, used) = match &mirror {
                                 Some(_) => mirror_latest(app, feed.as_ref(), now),
-                                None => latest_for(app, feed.as_ref(), fallback, source.as_ref(), &shared, pre, force, now),
+                                // Every app (and the launcher) updates only from its own GitHub repo, never from the ArtCraft feed.
+                                None => latest_for(app, None, fallback, source.as_ref(), &shared, pre, force, now),
                             };
                             if let Some(used) = used {
                                 sources.lock().unwrap_or_else(PoisonError::into_inner).push(used);
                             }
                             if app.id == LAUNCHER_ID {
-                                // Is there a newer ArtCraft Launcher?
+                                // Is there a newer Uni Launcher?
                                 if let Some(LatestRelease::Found(r)) = latest
                                     && let (Some(newest), Some(current)) = (r.version.as_ref(), crate::self_update::current_version())
                                     && version::is_newer(newest, &current)
@@ -332,7 +333,7 @@ impl NativeBackend {
             restarting
         };
         if restarting {
-            let result = Err("ArtCraft Launcher is restarting to finish its update. Try again once it's back.".into());
+            let result = Err("Uni Launcher is restarting to finish its update. Try again once it's back.".into());
             self.shared.emit(Event::JobFinished { app: app.id.to_string(), result });
             return;
         }
@@ -412,7 +413,7 @@ impl NativeBackend {
         let (Some(install), Some(platform)) = (self.shared.self_install.get().cloned().flatten(), self.platform) else {
             self.shared.emit(Event::JobFinished {
                 app: id,
-                result: Err("this copy of ArtCraft Launcher can't update itself; download the new version instead".into()),
+                result: Err("this copy of Uni Launcher can't update itself; download the new version instead".into()),
             });
             return;
         };
@@ -607,7 +608,7 @@ fn restart_blocked(mut busy: Vec<&str>) -> String {
         _ => (busy.join(", "), "were", "them"),
     };
     format!(
-        "ArtCraft Launcher didn't restart to update: {names} {were} still installing. Answer or close any password prompt, \
+        "Uni Launcher didn't restart to update: {names} {were} still installing. Answer or close any password prompt, \
          let {them} finish or cancel {them}, then press Update and restart again."
     )
 }
@@ -776,7 +777,7 @@ enum FeedFetch {
     Held,
 }
 
-/// Asks ArtCraft's release feed up to `attempts` times, as often as `throttle` allows (waiting at
+/// Asks Uni Launcher's release feed up to `attempts` times, as often as `throttle` allows (waiting at
 /// most [`MAX_THROTTLE_WAIT`] for it), saving a good answer.
 fn fetch_feed(http: &Http, paths: &Paths, url: &str, throttle: &Mutex<FeedThrottle>, attempts: usize) -> FeedFetch {
     let mut asked = false;
@@ -784,7 +785,7 @@ fn fetch_feed(http: &Http, paths: &Paths, url: &str, throttle: &Mutex<FeedThrott
         let wait = throttle.lock().unwrap_or_else(PoisonError::into_inner).wait(crate::now());
         if wait > MAX_THROTTLE_WAIT {
             if !asked {
-                log::info!("holding off the ArtCraft API for {wait} s");
+                log::info!("holding off the Uniphar API for {wait} s");
             }
             break;
         }
@@ -815,7 +816,7 @@ fn fetch_feed(http: &Http, paths: &Paths, url: &str, throttle: &Mutex<FeedThrott
                 }
             },
             Err(e) if e.throttled => {
-                log::warn!("the ArtCraft API asked us to slow down (HTTP 429); holding off");
+                log::warn!("the Uniphar API asked us to slow down (HTTP 429); holding off");
                 Outcome::Throttled { retry_after: e.retry_after }
             }
             Err(e) => {
@@ -851,7 +852,7 @@ fn is_loopback(url: &str) -> bool {
 
 /// `ARTCRAFT_LAUNCHER_DOWNLOAD_BASE`: a mirror on this machine (`cargo xtask local serve`) that
 /// serves `release_info.json` and the builds it lists. While it's set, releases come only from
-/// there (never GitHub or ArtCraft's API), and its download links are trusted. Loopback only, so
+/// there (never GitHub or Uni Launcher's API), and its download links are trusted. Loopback only, so
 /// nothing but the developer's own builds can be installed this way, and only in builds with the
 /// `local-mirror` feature: release builds ignore the variable.
 fn local_mirror() -> Option<String> {
@@ -870,7 +871,7 @@ fn local_mirror() -> Option<String> {
 }
 
 /// The local mirror's feed: `ARTCRAFT_LAUNCHER_FEED_URL` if set, else `release_info.json` beside
-/// the builds. Asked every check (it's on this machine), and never saved over ArtCraft's.
+/// the builds. Asked every check (it's on this machine), and never saved over Uni Launcher's.
 fn local_feed(http: &Http, base: &str) -> Option<Feed> {
     let url = std::env::var("ARTCRAFT_LAUNCHER_FEED_URL").ok().filter(|u| is_loopback(u)).unwrap_or_else(|| format!("{base}release_info.json"));
     match http.get_feed(&url) {
@@ -1154,7 +1155,7 @@ mod tests {
     fn feed() -> Feed {
         Feed::parse(
             r#"{"release_info": {"apps": {
-            "photocraft": {"repo": "storytold/photocraft", "latest_release": {"tag": "v0.6.0"}, "app_last_fetched": "2026-10-09T13:00:00Z"}
+            "unitexto": {"repo": "uaidenys/unitexto", "latest_release": {"tag": "v0.6.0"}, "app_last_fetched": "2026-10-09T13:00:00Z"}
         }}}"#,
         )
         .unwrap()
@@ -1204,8 +1205,8 @@ mod tests {
 
     #[test]
     fn a_local_mirror_answers_for_every_app_on_its_own() {
-        let photo = CraftApp::by_id("photocraft").unwrap();
-        let word = CraftApp::by_id("wordcraft").unwrap();
+        let photo = CraftApp::by_id("unitexto").unwrap();
+        let word = CraftApp::by_id("uniplanner").unwrap();
         let feed = feed().with_mirror("http://127.0.0.1:8787/");
         // Listed: found, even long after the sync.
         let (latest, _, _) = mirror_latest(photo, Some(&feed), NOW + 30 * 86_400);
@@ -1225,17 +1226,17 @@ mod tests {
     fn github_is_only_the_fallback_and_is_asked_rarely() {
         let github = CountingGitHub::default();
         let shared = shared();
-        let photo = CraftApp::by_id("photocraft").unwrap();
-        let word = CraftApp::by_id("wordcraft").unwrap();
+        let photo = CraftApp::by_id("unitexto").unwrap();
+        let word = CraftApp::by_id("uniplanner").unwrap();
         let feed = feed();
 
-        // The feed vouches for PhotoCraft: GitHub isn't asked.
+        // The feed vouches for UniTexto: GitHub isn't asked.
         let (latest, _, used) = latest_for(photo, Some(&feed), LOADED, &github, &shared, false, false, NOW);
         assert!(matches!(latest, Some(LatestRelease::Found(ref r)) if r.tag == "v0.6.0"));
         assert_eq!(used, Some(Source::Feed));
         assert_eq!(github.0.load(Ordering::SeqCst), 0);
 
-        // The feed doesn't list WordCraft: GitHub is asked once…
+        // The feed doesn't list UniPlanner: GitHub is asked once…
         let (_, _, used) = latest_for(word, Some(&feed), LOADED, &github, &shared, false, false, NOW);
         assert_eq!(used, Some(Source::GitHubApi));
         assert_eq!(github.0.load(Ordering::SeqCst), 1);
@@ -1260,9 +1261,9 @@ mod tests {
         assert_eq!(used, Some(Source::GitHubApi));
     }
 
-    const APP: &str = "photocraft";
+    const APP: &str = "unitexto";
 
-    /// A PhotoCraft release with one file per platform and format, so whichever this machine
+    /// A UniTexto release with one file per platform and format, so whichever this machine
     /// installs is there.
     fn release(version: &str) -> Release {
         let suffixes = ["-portable.zip", ".tar.gz", ".msi", ".dmg", ".AppImage", ".deb", ".rpm", ".flatpak"];
@@ -1296,14 +1297,14 @@ mod tests {
         let msi = Installed {
             version: None,
             source: artcraft_launcher_core::InstallSource::Msi,
-            location: r"C:\Apps\PhotoCraft\photocraft.exe".into(),
+            location: r"C:\Apps\UniTexto\unitexto.exe".into(),
             package: None,
         };
         assert_eq!(planned_asset(app, &release, platform, &portable_options, Some(&msi), None).unwrap().1, PackageKind::Msi);
         let launcher = Installed {
             version: None,
             source: artcraft_launcher_core::InstallSource::Launcher,
-            location: r"D:\Craft Apps\PhotoCraft\photocraft.exe".into(),
+            location: r"D:\Craft Apps\UniTexto\unitexto.exe".into(),
             package: None,
         };
         let record = crate::manifest::Record {
@@ -1337,7 +1338,7 @@ mod tests {
         release.assets.retain(|a| !a.name.ends_with(".AppImage"));
         assert!(planned_asset(app, &release, platform, &options, None, None).is_none());
         let existing =
-            Installed { version: None, source: artcraft_launcher_core::InstallSource::Deb, location: "/usr/bin/photocraft".into(), package: None };
+            Installed { version: None, source: artcraft_launcher_core::InstallSource::Deb, location: "/usr/bin/unitexto".into(), package: None };
         let system = BackendOptions { kinds: options.kinds.clone(), ..Default::default() };
         assert_eq!(
             planned_asset(app, &release, platform, &options, Some(&existing), None),
@@ -1423,7 +1424,7 @@ mod tests {
         let Some(platform) = native_platform() else { return };
         let dir = tempfile::tempdir().unwrap();
         let mut backend = backend(dir.path(), platform, Some(Arc::new(Newer)));
-        // A check needs a client; with pre-releases on it asks only `Newer`, never ArtCraft's API.
+        // A check needs a client; with pre-releases on it asks only `Newer`, never Uni Launcher's API.
         backend.http = Some(Http::new().unwrap());
         backend.shared.options.lock().unwrap().prereleases = true;
         keep_file(&backend);
@@ -1479,20 +1480,20 @@ mod tests {
     #[test]
     fn the_launcher_gives_up_waiting_and_names_the_busy_apps() {
         let jobs = Mutex::new(HashMap::new());
-        for id in [LAUNCHER_ID, "photocraft"] {
+        for id in [LAUNCHER_ID, "unitexto"] {
             jobs.lock().unwrap().insert(id.to_string(), Arc::new(Stop::default()));
         }
         let restarting = AtomicBool::new(false);
         let error = claim_restart(&jobs, &restarting, &Stop::default(), Duration::from_millis(300), &mut || {}).unwrap_err();
-        assert!(error.contains("PhotoCraft was still installing") && error.contains("cancel it"), "{error}");
+        assert!(error.contains("UniTexto was still installing") && error.contains("cancel it"), "{error}");
         assert!(!restarting.load(Ordering::SeqCst));
-        assert!(restart_blocked(vec!["WordCraft", "FilmCraft"]).contains("FilmCraft, WordCraft were still installing"));
+        assert!(restart_blocked(vec!["UniPlanner", "FilmCraft"]).contains("FilmCraft, UniPlanner were still installing"));
     }
 
     #[test]
     fn the_launcher_restarts_only_once_every_other_job_has_ended() {
         let jobs = Mutex::new(HashMap::new());
-        for id in [LAUNCHER_ID, "photocraft", "filmcraft"] {
+        for id in [LAUNCHER_ID, "unitexto", "filmcraft"] {
             jobs.lock().unwrap().insert(id.to_string(), Arc::new(Stop::default()));
         }
         let restarting = AtomicBool::new(false);
@@ -1503,7 +1504,7 @@ mod tests {
             let claim = scope.spawn(move || claim_restart(jobs, restarting, stop, RESTART_WAIT, &mut || waiting.send(()).unwrap()));
             waits.recv().unwrap();
             // One install ends; another is still running or queued.
-            jobs.lock().unwrap().remove("photocraft");
+            jobs.lock().unwrap().remove("unitexto");
             std::thread::sleep(Duration::from_millis(250));
             assert!(!claim.is_finished() && !restarting.load(Ordering::SeqCst));
             jobs.lock().unwrap().remove("filmcraft");
@@ -1521,7 +1522,7 @@ mod tests {
     #[test]
     fn a_cancelled_launcher_update_stops_waiting_and_claims_nothing() {
         let jobs =
-            Mutex::new(HashMap::from([(LAUNCHER_ID.to_string(), Arc::new(Stop::default())), ("photocraft".to_string(), Arc::new(Stop::default()))]));
+            Mutex::new(HashMap::from([(LAUNCHER_ID.to_string(), Arc::new(Stop::default())), ("unitexto".to_string(), Arc::new(Stop::default()))]));
         let restarting = AtomicBool::new(false);
         let stop = Stop::default();
         let (waiting, waits) = mpsc::channel();

@@ -1,4 +1,4 @@
-# Polish (pl) catalog for ArtCraft Launcher.
+# Polish (pl) catalog for Uni Launcher.
 # Format: context<TAB>source<TAB>translation
 # Empty context = plain UI string (tl!, t).
 # @id = command-id keyed (tr_id).
@@ -6,13 +6,13 @@
 # @msg = status/error message template (message, msg).
 # Other context = disambiguation for tr_ctx.
 #
-# Clean-room: written from the meaning of ArtCraft Launcher's English labels in neutral Polish,
+# Clean-room: written from the meaning of Uni Launcher's English labels in neutral Polish,
 # using the terms Polish users of creative and system software know. The user is addressed
 # informally ("twoje", "cię"), as in Polish system interfaces.
 #
 # Coverage: the whole interface — every menu string and tl! literal (complete_menus = true).
-# Left in English on purpose: product name "ArtCraft Launcher" (and its "Launcher" tag), suite
-# name "Craft App Suite", app names (PhotoCraft, LightCraft, FilmCraft, DesignCraft, VectorCraft,
+# Left in English on purpose: product name "Uni Launcher" (and its "Launcher" tag), suite
+# name "Uniphar Indústria Farmacêutica", app names (PhotoCraft, LightCraft, FilmCraft, DesignCraft, VectorCraft,
 # PdfCraft, EffectCraft, WordCraft, DeckCraft, GridCraft, CADCraft, SoundCraft, FigCraft), "GitHub",
 # "Discord".
 # Shortcut keys keep their key-cap names (Shift, Alt, Ctrl, Cmd, Esc).
@@ -20,7 +20,7 @@
 # {what}, {unit}, {real}, {e} must appear in translation.
 
 	Launcher	Launcher
-	Craft App Suite	Craft App Suite
+	Uniphar Indústria Farmacêutica	Uniphar Indústria Farmacêutica
 	Open Source Tools for Creatives, Makers, and Builders	Narzędzia open source dla artystów, twórców i konstruktorów
 	Settings	Ustawienia
 	Check for updates	Sprawdź dostępność aktualizacji
@@ -74,7 +74,7 @@
 	Reinstall	Przeinstaluj
 	Uninstall…	Odinstaluj…
 	All releases	Wszystkie wydania
-	ArtCraft Launcher {version} is available.	Dostępna jest nowa wersja ArtCraft Launcher ({version}).
+	Uni Launcher {version} is available.	Dostępna jest nowa wersja Uni Launcher ({version}).
 	Dismiss	Zamknij
 	Update and restart	Zaktualizuj i zrestartuj
 	A new version is available. Would you like to relaunch with the updated version?	Nowa wersja jest dostępna. Czy chcesz uruchomić ponownie ze zaktualizowaną wersją
@@ -85,7 +85,7 @@
 	Released {date}	Wydano {date}
 	Open on GitHub	Otwórz na GitHubie
 	Close	Zamknij
-	ArtCraft Launcher {version}	ArtCraft Launcher {version}
+	Uni Launcher {version}	Uni Launcher {version}
 	Only when I ask	Tylko kiedy zapytam
 	Automatically download and install updates	Automatycznie pobieraj i instaluj aktualizacje
 	Notify me when an installed app has an update	Powiadom mnie o aktualizacjach dla zainstalowanych aplikacji
@@ -98,11 +98,11 @@
 	Running in the background	Działanie w tle
 	Keep running in the tray when the window is closed	Po zamknięciu okna działaj w zasobniku systemowym
 	Show the window on the current desktop	Pokaż okno na bieżącym pulpicie
-	Start ArtCraft Launcher when I log in	Uruchom ArtCraft Launcher po zalogowaniu
+	Start Uni Launcher when I log in	Uruchom Uni Launcher po zalogowaniu
 	Community	Społeczność
-	Questions, ideas and news from the ArtCraft team	Pytania, pomysły i nowości od zespołu ArtCraft
+	Questions, ideas and news from the Uni Launcher team	Pytania, pomysły i nowości od zespołu Uni Launcher
 	Appearance	Motyw
-	Quit ArtCraft Launcher	Wyjdź z ArtCraft Launcher
+	Quit Uni Launcher	Wyjdź z Uni Launcher
 	Done	Gotowe
 	Uninstall {name}?	Odinstalować {name}?
 	The app will be moved to the Trash. Your documents and settings stay.	Aplikacja zostanie przeniesiona do kosza. Twoje dokumenty i ustawienia pozostaną.
@@ -137,7 +137,7 @@
 	Open link	Otwórz link
 	Update	Aktualizacja
 	{name} icon	Ikona {name}
-	Loading ArtCraft Launcher…	Ładowanie ArtCraft Launcher…
+	Loading Uni Launcher…	Ładowanie Uni Launcher…
 	Cancel update	Anuluj aktualizację
 	Stop waiting; the update can be started again later	Przerwij oczekiwanie; aktualizację można uruchomić ponownie później
 	Download again	Pobierz ponownie
@@ -170,8 +170,10 @@ pdfcraft	Reading, organizing and protecting PDFs	Czytanie, porządkowanie i zabe
 effectcraft	Motion graphics and visual effects	Grafika ruchoma i efekty wizualne
 designcraft	Page layout and publishing	Skład stron i publikowanie
 wordcraft	Writing and document design	Pisanie i projektowanie dokumentów
+unitexto	Writing and document design	Pisanie i projektowanie dokumentów
 deckcraft	Presentations and slide shows	Prezentacje i pokazy slajdów
 gridcraft	Spreadsheets and data	Arkusze kalkulacyjne i dane
+uniplanner	Spreadsheets and data	Arkusze kalkulacyjne i dane
 cadcraft	Computer-aided design and drafting	Projektowanie i kreślenie wspomagane komputerowo
 soundcraft	Recording, editing and mixing audio	Nagrywanie, edycja i miksowanie dźwięku
 figcraft	Interface design and prototyping	Projektowanie interfejsów i prototypowanie
@@ -195,8 +197,8 @@ month	Dec	gru
 	Installing for {platform}	Instalowanie dla {platform}
 	Downloads for {platform}	Do pobrania dla {platform}
 	No downloads for this system	Brak pobrań dla tego systemu
-	Join the ArtCraft community on Discord	Dołącz do społeczności ArtCraft na Discordzie
-	ArtCraft on {name}	ArtCraft w serwisie {name}
+	Join the Uni Launcher community on Discord	Dołącz do społeczności Uni Launcher na Discordzie
+	Uni Launcher on {name}	Uni Launcher w serwisie {name}
 	Couldn't open {name}: {e}	Nie udało się otworzyć {name}: {e}
 	Download cancelled	Anulowano pobieranie
 	Available to install	Dostępna do instalacji
@@ -216,7 +218,7 @@ month	Dec	gru
 	Version {version} installed	Wersja {version} zainstalowana
 	Version {latest}	Wersja {latest}
 	No release published yet	Nie opublikowano jeszcze wydania
-	ArtCraft Launcher	ArtCraft Launcher
+	Uni Launcher	Uni Launcher
 	App	Aplikacja
 	Latest	Najnowsza
 	Released	Wydano
@@ -238,7 +240,7 @@ month	Dec	gru
 	Couldn't check for updates: {f}	Nie udało się sprawdzić aktualizacji: {f}
 	Website (coming soon)	Strona (wkrótce)
 	GitHub repository	Repozytorium na GitHubie
-	ArtCraft	ArtCraft
+	Uni Launcher	Uni Launcher
 	Update 1 app	Zaktualizuj 1 aplikację
 	Update all ({count})	Zaktualizuj wszystkie ({count})
 	⊞  Grid	⊞  Siatka
@@ -251,7 +253,7 @@ month	Dec	gru
 	Full changelog	Pełna lista zmian
 	link	link
 	No apps match	Brak pasujących aplikacji
-	Open ArtCraft Launcher to update.	Otwórz ArtCraft Launcher, aby zaktualizować aplikacje.
+	Open Uni Launcher to update.	Otwórz Uni Launcher, aby zaktualizować aplikacje.
 	{name} {v} is available	Dostępna jest nowa wersja {name} {v}
 	{count} updates are available	Dostępne aktualizacje: {count}
 	These notes weren't fetched (GitHub's request limit was reached). They're on the release page.	Nie udało się pobrać tych notatek (osiągnięto limit zapytań GitHuba). Znajdziesz je na stronie wydania.
@@ -319,7 +321,7 @@ filter	Installed	Zainstalowane
 @id	launcher.notes	Co nowego
 @id	launcher.dismiss	Zamknij
 @id	settings.open	Ustawienia
-@id	settings.quit	Wyjdź z ArtCraft Launcher
+@id	settings.quit	Wyjdź z Uni Launcher
 @id	view.grid	Siatka
 @id	view.table	Tabela
 @id	filter.all	Wszystkie
@@ -343,16 +345,16 @@ filter	Installed	Zainstalowane
 @id	linux.preferred_kind	Instaluj nowe aplikacje jako
 @id	tray.close_to_tray	Po zamknięciu okna działaj w zasobniku systemowym
 @id	tray.show_on_current_desktop	Pokaż okno na bieżącym pulpicie
-@id	tray.login_item	Uruchom ArtCraft Launcher po zalogowaniu
+@id	tray.login_item	Uruchom Uni Launcher po zalogowaniu
 @id	appearance.theme	Wygląd
 
 # Tray (menu bar) menu and tooltip
-	Show ArtCraft Launcher	Pokaż ArtCraft Launcher
+	Show Uni Launcher	Pokaż Uni Launcher
 	Check for Updates	Sprawdź dostępność aktualizacji
 	Visit getartcraft.com	Odwiedź getartcraft.com
-	ArtCraft on GitHub	ArtCraft na GitHubie
-	Join the ArtCraft Discord	Dołącz do Discorda ArtCraft
-@plural	ArtCraft Launcher · {n} update available|ArtCraft Launcher · {n} updates available	ArtCraft Launcher · {n} dostępna aktualizacja|ArtCraft Launcher · {n} dostępne aktualizacje|ArtCraft Launcher · {n} dostępnych aktualizacji
+	Uni Launcher on GitHub	Uni Launcher na GitHubie
+	Join the Uni Launcher Discord	Dołącz do Discorda Uni Launcher
+@plural	Uni Launcher · {n} update available|Uni Launcher · {n} updates available	Uni Launcher · {n} dostępna aktualizacja|Uni Launcher · {n} dostępne aktualizacje|Uni Launcher · {n} dostępnych aktualizacji
 	Install folder	Folder instalacji
 	Default install folder	Domyślny folder instalacji
 	System default	Domyślny systemowy
@@ -365,7 +367,7 @@ filter	Installed	Zainstalowane
 @msg	couldn't use install folder {path}: {reason}	nie można użyć folderu instalacji {path}: {reason}
 @msg	this release has no AppImage for a custom install folder	to wydanie nie zawiera AppImage dla własnego folderu instalacji
 @msg	custom install folders aren't supported on this system	własne foldery instalacji nie są obsługiwane w tym systemie
-@msg	{path} already exists and wasn't installed by ArtCraft Launcher	{path} już istnieje i nie został zainstalowany przez ArtCraft Launcher
+@msg	{path} already exists and wasn't installed by Uni Launcher	{path} już istnieje i nie został zainstalowany przez Uni Launcher
 @msg	couldn't move {path} to Trash ({reason}). Remove it in Finder instead.	nie można przenieść {path} do Kosza ({reason}). Usuń go w Finderze.
 	Apps are placed inside this folder.	Aplikacje są umieszczane w tym folderze.
 	Replace what's there?	Zastąpić to, co tam jest?

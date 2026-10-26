@@ -29,7 +29,7 @@ $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
 # ---- app-specific values ----------------------------------------------------------------------
 $Pkg = 'artcraft-launcher'          # cargo package and binary
-$AppName = 'ArtCraft Launcher'      # display name
+$AppName = 'Uni Launcher'      # display name
 
 function Invoke-Native([string] $What, [scriptblock] $Block) {
   Write-Output "==> $What"
@@ -105,16 +105,11 @@ Copy-Item (Join-Path $Bin $Exe) $Stage
 # The ArtCraft mark and wordmark are drawn as supplied (docs/brand/LICENSE-brand.txt).
 function New-InstallerArt([string] $BannerOut, [string] $DialogOut) {
   Add-Type -AssemblyName System.Drawing
-  $ink = [System.Drawing.ColorTranslator]::FromHtml('#121316')
-  $accent = [System.Drawing.ColorTranslator]::FromHtml('#2d81ff')
-  $muted = [System.Drawing.Color]::FromArgb(153, 242, 241, 238)
-  $line = [System.Drawing.Color]::FromArgb(38, 242, 241, 238)
-  # The Craft App Suite, in the launcher's order (crates/core/src/catalog.rs).
-  $apps = 'photocraft', 'vectorcraft', 'filmcraft', 'lightcraft', 'pdfcraft', 'effectcraft',
-    'designcraft', 'figcraft', 'wordcraft', 'soundcraft', 'deckcraft', 'cadcraft', 'gridcraft'
+  $ink = [System.Drawing.ColorTranslator]::FromHtml('#395886')
+  $accent = [System.Drawing.ColorTranslator]::FromHtml('#628ecb')
+  $muted = [System.Drawing.ColorTranslator]::FromHtml('#d5deef')
   $mark = [System.Drawing.Image]::FromFile((Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\ai.storyteller.artcraft-launcher.png'))
-  $wordmark = [System.Drawing.Image]::FromFile((Join-Path $Root 'docs\brand\artcraft-logo-white.png'))
-  $icons = $apps | ForEach-Object { [System.Drawing.Image]::FromFile((Join-Path $Root "assets\app-icons\$_.png")) }
+  $titleFont = New-Object System.Drawing.Font 'Segoe UI Semibold', 22, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel)
   # The site's label face; GDI+ draws a variable font at its default instance (Regular).
   $fonts = New-Object System.Drawing.Text.PrivateFontCollection
   $fonts.AddFontFile((Join-Path $Root 'assets\fonts\GeistMono-Variable.ttf'))
@@ -139,33 +134,18 @@ function New-InstallerArt([string] $BannerOut, [string] $DialogOut) {
           $g.FillRectangle($panel, 0, 0, 164, 312)
           $g.FillRectangle($stripe, 162, 0, 2, 312)
           $g.DrawImage($mark, 16, 18, 44, 44)
-          $g.DrawImage($wordmark, 22, 74, 120, [int](120 * $wordmark.Height / $wordmark.Width))
-          # "LAUNCHER" in mono capitals, spaced like the site's labels (0.15 em).
+          $g.DrawString('Uni Launcher', $titleFont, [System.Drawing.Brushes]::White, 18, 70)
           $brush = New-Object System.Drawing.SolidBrush $muted
-          $x = 22.0
-          foreach ($ch in 'LAUNCHER'.ToCharArray()) {
-            $g.DrawString([string]$ch, $labelFont, $brush, $x, 94, [System.Drawing.StringFormat]::GenericTypographic)
-            $x += $g.MeasureString([string]$ch, $labelFont, 100, [System.Drawing.StringFormat]::GenericTypographic).Width + 1.35
-          }
+          $g.DrawString("UNIPHAR IND$([char]0xDA)STRIA`nFARMAC$([char]0xCA)UTICA", $labelFont, $brush, 22, 104)
+          $g.DrawString("DENYS RODRIGUES`nDE OLIVEIRA", $labelFont, $brush, 22, 270)
           $brush.Dispose()
-          # The apps, three to a row, in 36 px cells divided by hairlines (five rows fit above 312).
-          $pen = New-Object System.Drawing.Pen $line, 1
-          $left = 22; $top = 118; $cell = 36
-          for ($i = 0; $i -lt $icons.Count; $i++) {
-            $cx = $left + ($i % 3) * $cell
-            $cy = $top + [math]::Floor($i / 3) * $cell
-            $g.DrawRectangle($pen, $cx, $cy, $cell, $cell)
-            $g.DrawImage($icons[$i], $cx + 5, $cy + 5, $cell - 10, $cell - 10)
-          }
-          $pen.Dispose()
         }
       } finally { $panel.Dispose(); $stripe.Dispose(); $g.Dispose() }
       $bmp.Save($spec[0], [System.Drawing.Imaging.ImageFormat]::Bmp)
       $bmp.Dispose()
     }
   } finally {
-    $labelFont.Dispose(); $fonts.Dispose(); $mark.Dispose(); $wordmark.Dispose()
-    $icons | ForEach-Object { $_.Dispose() }
+    $labelFont.Dispose(); $fonts.Dispose(); $mark.Dispose(); $titleFont.Dispose()
   }
 }
 $Banner = Join-Path $Stage 'installer-banner.bmp'

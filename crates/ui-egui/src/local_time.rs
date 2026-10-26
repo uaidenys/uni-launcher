@@ -25,7 +25,7 @@ const RECHECK: std::time::Duration = std::time::Duration::from_secs(5 * 60);
 
 /// Seconds east of UTC in the system's time zone at `secs`; 0 when the zone can't be read.
 #[cfg(not(target_arch = "wasm32"))]
-fn offset(secs: i64) -> i64 {
+pub(crate) fn offset(secs: i64) -> i64 {
     let Some(zone) = system_zone() else { return 0 };
     jiff::Timestamp::from_second(secs).map_or(0, |at| i64::from(zone.to_offset(at).seconds()))
 }
@@ -52,7 +52,7 @@ fn system_zone() -> Option<jiff::tz::TimeZone> {
 
 /// Seconds east of UTC in the browser's time zone at `secs`; 0 when it gives nothing sensible.
 #[cfg(target_arch = "wasm32")]
-fn offset(secs: i64) -> i64 {
+pub(crate) fn offset(secs: i64) -> i64 {
     // Date's offset is in minutes *west* of UTC. Real zones are within a day of it.
     let at = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(secs as f64 * 1000.0));
     let west = at.get_timezone_offset();

@@ -90,7 +90,7 @@ pub(crate) fn appimage_version(name: &str, stems: &[&str]) -> Option<Option<Stri
 
 /// Who our Windows Installer packages name as their publisher.
 #[cfg_attr(not(windows), allow(dead_code))]
-const PUBLISHER: &str = "Learning Machines LLC";
+const PUBLISHER: &str = "Denys Rodrigues de Oliveira";
 
 /// Whether an uninstall entry's `DisplayName` and `Publisher` are `app`'s, under any name its
 /// installers have registered.
@@ -525,7 +525,7 @@ mod tests {
             "pdfcraft-0.3.0-linux-x86_64.deb",
             "pdfcraft-0.3.0-windows-x64.AppImage",
             "pdfcraft-cli-0.3.0-linux-x86_64.AppImage",
-            "photocraft-0.6.0-linux-x86_64.AppImage",
+            "unitexto-0.6.0-linux-x86_64.AppImage",
             "mypdfcraft.AppImage",
             "pdfcraft-latest.AppImage",
             ".appimage",
@@ -537,38 +537,38 @@ mod tests {
 
     #[test]
     fn parse_cli_version_accepts_id_display_name_and_former_id() {
-        let photo = CraftApp::by_id("photocraft").unwrap();
+        let photo = CraftApp::by_id("unitexto").unwrap();
         let sound = CraftApp::by_id("soundcraft").unwrap();
         let pdf = CraftApp::by_id("pdfcraft").unwrap();
-        assert_eq!(parse_cli_version("photocraft 0.7.0 (dev build)", photo).unwrap().to_string(), "0.7.0");
+        assert_eq!(parse_cli_version("unitexto 0.7.0 (dev build)", photo).unwrap().to_string(), "0.7.0");
         assert_eq!(parse_cli_version("SoundCraft 0.5.0", sound).unwrap().to_string(), "0.5.0");
         assert_eq!(parse_cli_version("printcraft 0.2.1", pdf).unwrap().to_string(), "0.2.1");
         assert_eq!(parse_cli_version("PdfCraft 0.6.0", pdf).unwrap().to_string(), "0.6.0");
-        assert!(strip_cli_prefix("photocraft-cli 1.0.0", "photocraft").is_none());
+        assert!(strip_cli_prefix("unitexto-cli 1.0.0", "unitexto").is_none());
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn finds_appimages_in_every_folder_newest_first() {
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = CraftApp::by_id("unitexto").unwrap();
         let root = tempfile::tempdir().unwrap();
         let (apps, gear, bin) = (root.path().join("Applications"), root.path().join("AppImages"), root.path().join("bin"));
         for d in [&apps, &gear, &bin] {
             std::fs::create_dir_all(d).unwrap();
         }
-        std::fs::write(apps.join("photocraft-0.5.0-linux-x86_64.AppImage"), b"").unwrap();
-        std::fs::write(apps.join("wordcraft-0.3.0-linux-x86_64.AppImage"), b"").unwrap();
-        std::fs::write(gear.join("photocraft.appimage"), b"").unwrap();
-        std::fs::write(bin.join("photocraft-0.6.0-linux-x86_64.AppImage"), b"").unwrap();
-        std::fs::create_dir(bin.join("photocraft.AppImage")).unwrap();
+        std::fs::write(apps.join("unitexto-0.5.0-linux-x86_64.AppImage"), b"").unwrap();
+        std::fs::write(apps.join("uniplanner-0.3.0-linux-x86_64.AppImage"), b"").unwrap();
+        std::fs::write(gear.join("unitexto.appimage"), b"").unwrap();
+        std::fs::write(bin.join("unitexto-0.6.0-linux-x86_64.AppImage"), b"").unwrap();
+        std::fs::create_dir(bin.join("unitexto.AppImage")).unwrap();
         let found = linux::appimages_in(app, &[apps.clone(), gear.clone(), bin.clone(), root.path().join("missing")]);
         let names: Vec<_> = found.iter().map(|(p, v)| (p.clone(), v.as_ref().map(ToString::to_string))).collect();
         assert_eq!(
             names,
             [
-                (bin.join("photocraft-0.6.0-linux-x86_64.AppImage"), Some("0.6.0".to_string())),
-                (apps.join("photocraft-0.5.0-linux-x86_64.AppImage"), Some("0.5.0".to_string())),
-                (gear.join("photocraft.appimage"), None),
+                (bin.join("unitexto-0.6.0-linux-x86_64.AppImage"), Some("0.6.0".to_string())),
+                (apps.join("unitexto-0.5.0-linux-x86_64.AppImage"), Some("0.5.0".to_string())),
+                (gear.join("unitexto.appimage"), None),
             ]
         );
     }
@@ -595,7 +595,7 @@ mod tests {
     fn printcraft_entries_match_nothing_else() {
         let pdf = CraftApp::by_id("pdfcraft").unwrap();
         assert!(!is_installer_entry(pdf, "PrintCraft", "Some Other Publisher"));
-        assert!(!is_installer_entry(pdf, "PhotoCraft", LEARNING_MACHINES));
+        assert!(!is_installer_entry(pdf, "UniTexto", LEARNING_MACHINES));
         for a in SUITE.iter().filter(|a| a.id != "pdfcraft") {
             assert!(!is_installer_entry(a, "PrintCraft", LEARNING_MACHINES), "PrintCraft matched {}", a.name);
         }

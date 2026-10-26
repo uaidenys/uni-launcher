@@ -125,13 +125,13 @@ fn release(id: &str, v: &str, at: i64) -> Release {
         version: version::parse(v),
         name: format!("v{v}"),
         published_at: Some(at),
-        html_url: format!("https://github.com/storytold/{id}/releases/tag/v{v}"),
-        notes: "## What's Changed\n* Faster things by @a in https://github.com/storytold/x/pull/1".into(),
+        html_url: format!("https://github.com/uaidenys/{id}/releases/tag/v{v}"),
+        notes: "## What's Changed\n* Faster things by @a in https://github.com/uaidenys/x/pull/1".into(),
         prerelease: false,
         assets: vec![Asset {
             name: name.clone(),
             size: 150 << 20,
-            url: format!("https://github.com/storytold/{id}/releases/download/v{v}/{name}"),
+            url: format!("https://github.com/uaidenys/{id}/releases/download/v{v}/{name}"),
             sha256: None,
         }],
     }
@@ -141,14 +141,14 @@ fn release(id: &str, v: &str, at: i64) -> Release {
 fn events() -> Vec<Event> {
     let mut ev = Vec::new();
     let versions = [
-        ("photocraft", "0.5.0"),
+        ("unitexto", "0.5.0"),
         ("vectorcraft", "0.7.0"),
         ("filmcraft", "0.4.0"),
         ("lightcraft", "0.4.0"),
         ("pdfcraft", "0.4.0"),
         ("effectcraft", "0.6.0"),
         ("designcraft", "0.4.0"),
-        ("wordcraft", "0.3.0"),
+        ("uniplanner", "0.3.0"),
         ("deckcraft", "0.3.0"),
         ("gridcraft", "0.3.0"),
         ("cadcraft", "0.3.0"),
@@ -161,7 +161,7 @@ fn events() -> Vec<Event> {
         });
     }
     ev.push(Event::Latest { app: "soundcraft".into(), latest: LatestRelease::None, from: Origin::ArtCraftApi });
-    let installed = [("photocraft", "0.4.1"), ("lightcraft", "0.4.0"), ("wordcraft", "0.3.0"), ("effectcraft", "0.5.0")];
+    let installed = [("unitexto", "0.4.1"), ("lightcraft", "0.4.0"), ("uniplanner", "0.3.0"), ("effectcraft", "0.5.0")];
     for app in &SUITE {
         let inst = installed.iter().find(|(id, _)| *id == app.id).map(|(_, v)| Installed {
             version: version::parse(v),
@@ -308,8 +308,8 @@ fn folder_harness(picked: Rc<RefCell<Option<String>>>) -> (Harness<'static, Opti
     let sent = Rc::new(RefCell::new(Vec::new()));
     let mut backend = Some(Fake {
         events: vec![
-            Event::Latest { app: "photocraft".into(), latest: LatestRelease::Found(release("photocraft", "0.6.0", NOW)), from: Origin::GitHub },
-            Event::Detected { app: "photocraft".into(), installed: None },
+            Event::Latest { app: "unitexto".into(), latest: LatestRelease::Found(release("unitexto", "0.6.0", NOW)), from: Origin::GitHub },
+            Event::Detected { app: "unitexto".into(), installed: None },
         ],
         sent: sent.clone(),
         manage: true,
@@ -383,8 +383,8 @@ fn a_fresh_install_confirms_the_folder_and_configures_before_installing() {
     let commands = install_commands(&sent);
     assert!(matches!(commands.first(), Some(Command::Configure(options))
         if options.install_locations.root.as_deref() == Some("/Volumes/Craft Apps")
-        && options.install_locations.folder("photocraft") == Some("/Volumes/Typed Photo")));
-    assert_eq!(commands.get(1), Some(&Command::Install { app: "photocraft".into() }));
+        && options.install_locations.folder("unitexto") == Some("/Volumes/Typed Photo")));
+    assert_eq!(commands.get(1), Some(&Command::Install { app: "unitexto".into() }));
 }
 
 #[test]
@@ -393,7 +393,7 @@ fn use_default_removes_an_app_override_and_settings_can_reset_the_root() {
     let (mut h, sent) = folder_harness(picked);
     h.run_steps(8);
     h.state_mut().as_mut().unwrap().settings.install_locations.root = Some("/Volumes/Craft Apps".into());
-    h.state_mut().as_mut().unwrap().settings.install_locations.per_app.insert("photocraft".into(), "/Volumes/Old Photo".into());
+    h.state_mut().as_mut().unwrap().settings.install_locations.per_app.insert("unitexto".into(), "/Volumes/Old Photo".into());
     h.run_steps(2);
     h.get_by_label("Install").scroll_to_me();
     h.run_steps(3);
@@ -406,7 +406,7 @@ fn use_default_removes_an_app_override_and_settings_can_reset_the_root() {
     h.run_steps(2);
     assert!(h.state().as_ref().unwrap().settings.install_locations.per_app.is_empty());
     assert!(
-        matches!(install_commands(&sent).first(), Some(Command::Configure(options)) if options.install_locations.folder("photocraft") == Some("/Volumes/Craft Apps"))
+        matches!(install_commands(&sent).first(), Some(Command::Configure(options)) if options.install_locations.folder("unitexto") == Some("/Volumes/Craft Apps"))
     );
     h.get_by_label("Settings").click();
     h.run_steps(3);
@@ -453,9 +453,9 @@ fn install_locations_survive_settings_save_and_older_settings_use_system_default
     assert_eq!(old.install_locations, Default::default());
     let mut settings = old;
     settings.install_locations.root = Some("/Volumes/Craft Apps".into());
-    settings.install_locations.per_app.insert("photocraft".into(), "/Volumes/Photo".into());
+    settings.install_locations.per_app.insert("unitexto".into(), "/Volumes/Photo".into());
     let restored: Settings = serde_json::from_str(&serde_json::to_string(&settings).unwrap()).unwrap();
-    assert_eq!(restored.install_locations.folder("photocraft"), Some("/Volumes/Photo"));
+    assert_eq!(restored.install_locations.folder("unitexto"), Some("/Volumes/Photo"));
     assert_eq!(restored.install_locations.folder("filmcraft"), Some("/Volumes/Craft Apps"));
 }
 
@@ -509,14 +509,14 @@ fn grid_shows_every_status_and_installs_on_click() {
     // The window has no title bar of its own here (the web build, and the tests).
     assert!(h.query_by_label("Close").is_none());
     assert!(h.query_all_by_label_contains("Discord").count() >= 1); // the footer icon (the header has none)
-    assert!(h.query_by_label("Join the ArtCraft community on Discord").is_none(), "no Discord link in the header");
+    assert!(h.query_by_label("Join the Uni Launcher community on Discord").is_none(), "no Discord link in the header");
     assert!(h.query_all_by_label("Coming soon").count() >= 1);
     h.get_by_label_contains("48 MB of 131 MB");
     h.get_by_label("Update all (2)").click();
     h.run_steps(2);
     let installs: Vec<_> = sent.borrow().iter().filter_map(|c| if let Command::Install { app } = c { Some(app.clone()) } else { None }).collect();
     assert_eq!(installs.len(), 2, "{installs:?}");
-    assert!(installs.contains(&"photocraft".to_string()) && installs.contains(&"effectcraft".to_string()));
+    assert!(installs.contains(&"unitexto".to_string()) && installs.contains(&"effectcraft".to_string()));
 }
 
 #[test]
@@ -601,7 +601,7 @@ fn a_dismissed_install_prompt_is_not_called_a_cancelled_download() {
 #[test]
 fn a_kept_update_names_its_version_and_an_up_to_date_app_is_not_downloaded_again() {
     let mut ev = events();
-    for app in ["effectcraft", "wordcraft"] {
+    for app in ["effectcraft", "uniplanner"] {
         ev.push(Event::ReadyToInstall { app: app.into(), ready: true });
     }
     let (mut h, sent) = harness_with(ev, ViewMode::Table, egui::Theme::Dark, true, 1.0);
@@ -612,8 +612,8 @@ fn a_kept_update_names_its_version_and_an_up_to_date_app_is_not_downloaded_again
     h.get_by_label("Retry update to 0.6.0").click();
     h.run_steps(2);
     assert_eq!(*sent.borrow(), [Command::Install { app: "effectcraft".into() }]);
-    // WordCraft is up to date: its menu offers Reinstall, which uses the kept file.
-    let row = h.get_all_by_label("WordCraft").next().unwrap().rect().center().y;
+    // UniPlanner is up to date: its menu offers Reinstall, which uses the kept file.
+    let row = h.get_all_by_label("UniPlanner").next().unwrap().rect().center().y;
     h.get_all_by_label("…").find(|n| (n.rect().center().y - row).abs() < 25.0).unwrap().click();
     h.run_steps(3);
     h.get_by_label("Reinstall");
@@ -624,7 +624,7 @@ fn a_kept_update_names_its_version_and_an_up_to_date_app_is_not_downloaded_again
 fn an_install_waiting_for_another_says_so_and_can_be_cancelled() {
     let mut events = events();
     // Two updates reached the system's installer together: one runs, the other waits its turn.
-    events.push(Event::Progress { app: "photocraft".into(), phase: JobPhase::Installing });
+    events.push(Event::Progress { app: "unitexto".into(), phase: JobPhase::Installing });
     events.push(Event::Progress { app: "effectcraft".into(), phase: JobPhase::Waiting });
     let (mut h, sent) = harness_with(events, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
@@ -681,7 +681,7 @@ fn table_view_and_light_theme() {
     snapshot(&mut h, "table-light");
     h.get_by_label("Update to 0.5.0").click();
     h.run_steps(2);
-    assert!(sent.borrow().contains(&Command::Install { app: "photocraft".into() }));
+    assert!(sent.borrow().contains(&Command::Install { app: "unitexto".into() }));
     h.get_all_by_label("Open").next().unwrap().click();
     h.run_steps(2);
     assert!(sent.borrow().iter().any(|c| matches!(c, Command::Launch { .. })));
@@ -691,23 +691,23 @@ fn table_view_and_light_theme() {
 fn hiding_an_app_removes_it_until_it_is_unhidden() {
     let (mut h, _) = harness(ViewMode::Table, egui::Theme::Dark, true);
     h.run_steps(6);
-    let row = h.get_all_by_label("PhotoCraft").next().unwrap().rect().center().y;
+    let row = h.get_all_by_label("UniTexto").next().unwrap().rect().center().y;
     h.get_all_by_label("…").find(|n| (n.rect().center().y - row).abs() < 25.0).unwrap().click();
     h.run_steps(3);
     h.get_by_label("Hide App").click();
     h.run_steps(4);
-    assert!(h.query_by_label("PhotoCraft").is_none());
-    assert!(h.state().as_ref().unwrap().settings.hidden.contains("photocraft"));
+    assert!(h.query_by_label("UniTexto").is_none());
+    assert!(h.state().as_ref().unwrap().settings.hidden.contains("unitexto"));
     h.get_by_label("Hidden Apps 1").click();
     h.run_steps(4);
-    h.get_by_label("PhotoCraft");
-    assert!(h.query_by_label("WordCraft").is_none());
-    let row = h.get_all_by_label("PhotoCraft").next().unwrap().rect().center().y;
+    h.get_by_label("UniTexto");
+    assert!(h.query_by_label("UniPlanner").is_none());
+    let row = h.get_all_by_label("UniTexto").next().unwrap().rect().center().y;
     h.get_all_by_label("…").find(|n| (n.rect().center().y - row).abs() < 25.0).unwrap().click();
     h.run_steps(3);
     h.get_by_label("Unhide App").click();
     h.run_steps(4);
-    h.get_by_label("PhotoCraft");
+    h.get_by_label("UniTexto");
     assert!(h.query_by_label("Hidden Apps 1").is_none());
     assert!(h.state().as_ref().unwrap().settings.hidden.is_empty());
     assert_eq!(h.state().as_ref().unwrap().settings.filter, artcraft_launcher_ui_egui::settings::Filter::All);
@@ -720,8 +720,8 @@ fn switching_views() {
     h.get_by_label("Show apps as a table").click();
     h.run_steps(4);
     assert_eq!(h.state().as_ref().unwrap().settings.view, ViewMode::Table);
-    h.get_by_label("PhotoCraft");
-    h.get_by_label("WordCraft");
+    h.get_by_label("UniTexto");
+    h.get_by_label("UniPlanner");
 }
 
 /// How far the middle of these lines of text is below the middle of the app icon beside them, in points.
@@ -743,12 +743,12 @@ fn name_and_tagline_are_centred_on_the_icon() {
         let (mut h, _) = harness_at(ViewMode::Grid, egui::Theme::Dark, true, scale);
         h.run_steps(8);
         snapshot(&mut h, &format!("grid-dark{suffix}"));
-        let off = below_icon_centre(&h, &["PhotoCraft", "Image editing"]);
+        let off = below_icon_centre(&h, &["UniTexto", "Image editing"]);
         assert!(off.abs() < 0.25, "grid at {scale}x: {off}");
         let (mut h, _) = harness_at(ViewMode::Table, egui::Theme::Light, true, scale);
         h.run_steps(8);
         snapshot(&mut h, &format!("table-light{suffix}"));
-        let off = below_icon_centre(&h, &["PhotoCraft", "Image editing"]);
+        let off = below_icon_centre(&h, &["UniTexto", "Image editing"]);
         assert!(off.abs() < 0.25, "table at {scale}x: {off}");
     }
 }
@@ -779,13 +779,13 @@ fn every_table_column_sorts_both_ways() {
     h.get_by_label("Status").click();
     h.run_steps(3);
     let o = order(&h);
-    assert_eq!(&o[..4], ["PhotoCraft", "EffectCraft", "LightCraft", "WordCraft"], "{o:?}");
+    assert_eq!(&o[..4], ["UniTexto", "EffectCraft", "LightCraft", "UniPlanner"], "{o:?}");
     // Reversed: the apps not installed first, then up to date, then the updates last. The table
     // keeps its column's order; only the grid puts installed apps above the rest.
     h.get_by_label("Status").click();
     h.run_steps(3);
     let o = order(&h);
-    assert_eq!(&o[o.len().saturating_sub(4)..], ["LightCraft", "WordCraft", "PhotoCraft", "EffectCraft"], "{o:?}");
+    assert_eq!(&o[o.len().saturating_sub(4)..], ["LightCraft", "UniPlanner", "UniTexto", "EffectCraft"], "{o:?}");
     // The old Installed and Latest columns are gone; Version shows the number, and from and to for an update.
     assert!(h.query_by_label("Latest").is_none());
     h.get_by_label("Version");
@@ -799,7 +799,7 @@ fn every_table_column_sorts_both_ways() {
     h.get_by_label("App").click();
     h.run_steps(3);
     let o = order(&h);
-    assert_eq!(o.first().map(String::as_str), Some("WordCraft"), "{o:?}");
+    assert_eq!(o.first().map(String::as_str), Some("UniPlanner"), "{o:?}");
 }
 
 #[test]
@@ -809,7 +809,7 @@ fn settings_link_to_discord() {
     h.get_by_label("Settings").click();
     h.run_steps(4);
     snapshot(&mut h, "settings-dark");
-    h.get_by_label("Questions, ideas and news from the ArtCraft team");
+    h.get_by_label("Questions, ideas and news from the Uni Launcher team");
     // The footer icon and the button in Settings.
     assert!(h.query_all_by_label_contains("Discord").count() >= 2);
 }
@@ -823,7 +823,7 @@ fn the_uninstall_prompt_keeps_its_own_size_after_a_taller_dialog() {
     h.run_steps(4);
     h.get_by_label("Done").click();
     h.run_steps(3);
-    // PhotoCraft is installed, so its … menu offers Uninstall.
+    // UniTexto is installed, so its … menu offers Uninstall.
     h.get_all_by_label("…").next().unwrap().click();
     h.run_steps(3);
     h.get_by_label("Uninstall…").click();
@@ -855,10 +855,10 @@ fn links_to_the_website_github_and_each_apps_pages() {
     // The table's … menu has the app's website and GitHub repo.
     let (mut h, _) = harness(ViewMode::Table, egui::Theme::Dark, true);
     h.run_steps(6);
-    h.get_all_by_label("…").nth(8).unwrap().click(); // WordCraft
+    h.get_all_by_label("…").nth(8).unwrap().click(); // UniPlanner
     h.run_steps(3);
     h.get_by_label("GitHub repository");
-    // The footer's Website link and WordCraft's now-live one in the menu.
+    // The footer's Website link and UniPlanner's now-live one in the menu.
     assert!(h.query_all_by_label_contains("Website").count() >= 2);
 }
 
@@ -893,10 +893,10 @@ fn links_open_the_right_pages() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
     assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://discord.gg/artcraft"));
-    // The footer's ArtCraft links and each card's own pages.
+    // The footer's Uni Launcher links and each card's own pages.
     let github = all_opened(&mut h, "GitHub");
     assert!(github.contains(&"https://github.com/storytold".to_string()), "{github:?}");
-    assert!(github.contains(&"https://github.com/storytold/photocraft".to_string()), "{github:?}");
+    assert!(github.contains(&"https://github.com/uaidenys/unitexto".to_string()), "{github:?}");
     let sites = all_opened(&mut h, "Website");
     assert!(sites.contains(&"https://getartcraft.com".to_string()), "{sites:?}");
     assert_eq!(sites, vec!["https://getartcraft.com".to_string()], "{sites:?}");
@@ -911,7 +911,7 @@ fn links_open_the_right_pages() {
     h.run_steps(3);
     // The first card is the first installed app by name.
     let url = click_opens(&mut h, "All releases").unwrap_or_default();
-    assert!(url.starts_with("https://github.com/storytold/") && url.ends_with("/releases"), "{url}");
+    assert!(url.starts_with("https://github.com/uaidenys/") && url.ends_with("/releases"), "{url}");
 }
 
 #[test]
@@ -1008,7 +1008,7 @@ fn the_launcher_updates_itself_and_quits_to_restart() {
         None,
     );
     h.run_steps(6);
-    h.get_by_label_contains("ArtCraft Launcher 0.2.0 is available");
+    h.get_by_label_contains("Uni Launcher 0.2.0 is available");
     h.get_by_label("Update and restart").click();
     h.run_steps(2);
     assert!(sent.borrow().contains(&Command::UpdateLauncher));
@@ -1032,7 +1032,7 @@ fn launcher_update_prompts_to_relaunch_with_updated_version() {
     let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
     // Dialog pops up on launch with the update prompt
-    h.get_by_label_contains("ArtCraft Launcher 0.2.0 is available");
+    h.get_by_label_contains("Uni Launcher 0.2.0 is available");
     h.get_by_label("A new version is available. Would you like to relaunch with the updated version?");
     h.get_by_label("What's new");
     // Clicking "Later" dismisses the modal dialog
@@ -1136,7 +1136,7 @@ fn automatic_updates_queue_installs_for_outdated_apps_and_launcher() {
     );
     h.run_steps(4);
     let commands = sent.borrow().clone();
-    assert!(commands.contains(&Command::Install { app: "photocraft".into() }), "outdated photocraft should be queued for install: {commands:?}");
+    assert!(commands.contains(&Command::Install { app: "unitexto".into() }), "outdated unitexto should be queued for install: {commands:?}");
     assert!(commands.contains(&Command::Install { app: "effectcraft".into() }), "outdated effectcraft should be queued for install: {commands:?}");
     assert!(commands.contains(&Command::UpdateLauncher), "launcher update should be queued: {commands:?}");
 }
@@ -1165,7 +1165,7 @@ fn automatic_updates_are_disabled_by_default() {
     );
     h.run_steps(4);
     let commands = sent.borrow().clone();
-    assert!(!commands.contains(&Command::Install { app: "photocraft".into() }), "photocraft should not be auto-installed when auto_update is false");
+    assert!(!commands.contains(&Command::Install { app: "unitexto".into() }), "unitexto should not be auto-installed when auto_update is false");
     assert!(!commands.contains(&Command::UpdateLauncher), "launcher should not be auto-updated when auto_update is false");
 }
 
@@ -1195,10 +1195,10 @@ fn the_footer_names_the_services_behind_what_is_on_screen() {
             h.get_by_label_contains("Checked ").accesskit_node().label().or_else(|| h.get_by_label_contains("Checked ").accesskit_node().value());
         label.unwrap_or_default()
     };
-    assert_eq!(footer(Vec::new()), "Checked 3 min ago · using ArtCraft API");
+    assert_eq!(footer(Vec::new()), "Checked 3 min ago · using Uniphar API");
     let from_github =
-        vec![Event::Latest { app: "wordcraft".into(), latest: LatestRelease::Found(release("wordcraft", "0.3.1", NOW)), from: Origin::GitHub }];
-    assert_eq!(footer(from_github), "Checked 3 min ago · using ArtCraft API and GitHub");
+        vec![Event::Latest { app: "uniplanner".into(), latest: LatestRelease::Found(release("uniplanner", "0.3.1", NOW)), from: Origin::GitHub }];
+    assert_eq!(footer(from_github), "Checked 3 min ago · using Uniphar API and GitHub");
 }
 
 #[test]
@@ -1256,8 +1256,8 @@ fn clicking_a_card_opens_its_details_drawer() {
     h.run_steps(8);
     // Every app has a page: a card of each generation opens one.
     h.get_by_label("VectorCraft details");
-    h.get_by_label("WordCraft details");
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniPlanner details");
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-dark");
     h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
@@ -1284,7 +1284,7 @@ fn clicking_a_card_opens_its_details_drawer() {
 fn details_drawer_in_the_light_theme() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Light, true);
     h.run_steps(8);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-light");
     h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
@@ -1298,17 +1298,17 @@ fn fetches(sent: &Rc<RefCell<Vec<Command>>>, app: &str) -> usize {
 fn opening_a_page_asks_for_its_pictures_once_and_only_while_it_lacks_some() {
     let (mut h, sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
-    assert_eq!(fetches(&sent, "photocraft"), 0, "nothing is fetched before a page is opened");
-    h.get_by_label("PhotoCraft details").click();
+    assert_eq!(fetches(&sent, "unitexto"), 0, "nothing is fetched before a page is opened");
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
-    assert_eq!(fetches(&sent, "photocraft"), 1);
+    assert_eq!(fetches(&sent, "unitexto"), 1);
     h.get_by_label("Enlarge picture");
     // Closed and opened again: the pictures are in hand, so nothing is asked.
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
-    assert_eq!(fetches(&sent, "photocraft"), 1);
+    assert_eq!(fetches(&sent, "unitexto"), 1);
     h.get_by_label("Enlarge picture");
     // Another page asks for its own, and a page without pictures asks for nothing.
     h.key_press(egui::Key::Escape);
@@ -1332,7 +1332,7 @@ fn a_frame_stands_in_for_the_pictures_until_they_arrive() {
     let pictures = Rc::new(Cell::new(Pictures::Silent));
     let (mut h, sent) = harness_pictures(events(), ViewMode::Grid, egui::Theme::Dark, true, 1.0, pictures.clone());
     h.run_steps(8);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-loading-dark");
     h.get_by_label("Loading pictures…");
@@ -1343,7 +1343,7 @@ fn a_frame_stands_in_for_the_pictures_until_they_arrive() {
     h.run_steps(3);
     h.get_by_label_contains("Levels with a live histogram · 2/4");
     // Asking again meanwhile is not done: the answer is on its way.
-    assert_eq!(fetches(&sent, "photocraft"), 1);
+    assert_eq!(fetches(&sent, "unitexto"), 1);
     pictures.set(Pictures::Online);
     h.run_steps(6);
     assert!(h.query_by_label("Loading pictures…").is_none());
@@ -1355,7 +1355,7 @@ fn offline_the_frame_says_so_and_opening_the_page_again_retries() {
     let pictures = Rc::new(Cell::new(Pictures::Offline));
     let (mut h, sent) = harness_pictures(events(), ViewMode::Grid, egui::Theme::Light, true, 1.0, pictures.clone());
     h.run_steps(8);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-offline-light");
     h.get_by_label("Pictures couldn't be loaded. Reopen this page to try again.");
@@ -1366,9 +1366,9 @@ fn offline_the_frame_says_so_and_opening_the_page_again_retries() {
     pictures.set(Pictures::Online);
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
-    assert_eq!(fetches(&sent, "photocraft"), 2);
+    assert_eq!(fetches(&sent, "unitexto"), 2);
     h.get_by_label("Enlarge picture");
     assert!(h.query_by_label("Pictures couldn't be loaded. Reopen this page to try again.").is_none());
 }
@@ -1378,7 +1378,7 @@ fn the_enlarged_view_shows_a_frame_for_a_picture_still_missing() {
     let pictures = Rc::new(Cell::new(Pictures::SecondFails));
     let (mut h, _sent) = harness_pictures(events(), ViewMode::Grid, egui::Theme::Dark, true, 1.0, pictures);
     h.run_steps(8);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     h.get_by_label("Enlarge picture").click();
     h.run_steps(3);
@@ -1413,7 +1413,7 @@ fn a_page_without_pictures_has_no_gallery() {
 fn the_lead_picture_can_be_enlarged() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     // The drawer has one "Close (Esc)"; the enlarged view adds its own.
     assert_eq!(h.query_all_by_label("Close (Esc)").count(), 1);
@@ -1491,7 +1491,7 @@ fn every_page_opens_and_pages_through_its_pictures() {
 fn the_drawer_and_the_enlarged_picture_survive_any_window_size() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     let sizes = [(1180.0, 900.0), (720.0, 500.0), (480.0, 320.0), (320.0, 200.0), (120.0, 90.0), (40.0, 30.0), (4000.0, 2400.0)];
     for zoom in [false, true] {
@@ -1631,8 +1631,8 @@ fn narrow_header_keeps_the_view_switch_clear_of_brand_text() {
                 for label in ["Show apps as cards", "Show apps as a table", "Settings", "Check for updates"] {
                     let rect = h.get_by_label(label).rect();
                     assert!(rect.left() >= 0.0 && rect.right() <= width, "{bar:?} {width}: {label} {rect:?}");
-                    if let Some(text) = h.query_by_label("Craft App Suite") {
-                        assert!(!rect.intersects(text.rect()), "{bar:?} {width}: Craft App Suite overlaps {label} {rect:?}");
+                    if let Some(text) = h.query_by_label("Uniphar Indústria Farmacêutica") {
+                        assert!(!rect.intersects(text.rect()), "{bar:?} {width}: Uniphar Indústria Farmacêutica overlaps {label} {rect:?}");
                     }
                 }
                 if bar == TitleBar::Custom {
@@ -1643,7 +1643,7 @@ fn narrow_header_keeps_the_view_switch_clear_of_brand_text() {
                 }
                 if width == 1180.0 {
                     assert!(h.query_by_label("Launcher").is_none());
-                    h.get_by_label("Craft App Suite");
+                    h.get_by_label("Uniphar Indústria Farmacêutica");
                 }
                 if [720.0, 800.0, 1180.0].contains(&width) {
                     snapshot(&mut h, &format!("header-{theme:?}-{bar:?}-{width}"));
@@ -1866,18 +1866,18 @@ fn command_m_minimizes_the_mac_window_only() {
 
 #[test]
 fn an_occupied_folder_asks_before_replacing_it() {
-    let path = "/Volumes/Craft Apps/PhotoCraft.app";
+    let path = "/Volumes/Craft Apps/UniTexto.app";
     let mut ev = events();
-    ev.push(Event::Occupied { app: "photocraft".into(), path: path.into() });
-    ev.push(Event::JobFinished { app: "photocraft".into(), result: Err(format!("{path} already exists")) });
+    ev.push(Event::Occupied { app: "unitexto".into(), path: path.into() });
+    ev.push(Event::JobFinished { app: "unitexto".into(), result: Err(format!("{path} already exists")) });
     let (mut h, sent) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
-    h.get_by_label(&format!("{path} already exists. Installing PhotoCraft will overwrite it."));
+    h.get_by_label(&format!("{path} already exists. Installing UniTexto will overwrite it."));
     assert!(h.query_by_label(&format!("{path} already exists")).is_none());
     sent.borrow_mut().clear();
     h.get_by_label("Replace").click();
     h.run_steps(2);
-    assert_eq!(*sent.borrow(), [Command::Replace { app: "photocraft".into() }]);
+    assert_eq!(*sent.borrow(), [Command::Replace { app: "unitexto".into() }]);
     assert!(h.query_by_label("Replace").is_none());
 }
 
@@ -1950,12 +1950,12 @@ fn opening_an_app_counts_and_frequently_used_puts_the_most_opened_first() {
     // Installed apps in name order: Effect (updates), Light (Open), Photo (updates), Word (Open).
     let opens: Vec<_> = h.get_all_by_label("Open").collect();
     assert_eq!(opens.len(), 2);
-    opens[1].click(); // WordCraft
+    opens[1].click(); // UniPlanner
     h.run_steps(3);
-    assert!(sent.borrow().contains(&Command::Launch { app: "wordcraft".into() }));
-    assert_eq!(h.state().as_ref().unwrap().settings.launches.get("wordcraft"), Some(&1));
+    assert!(sent.borrow().contains(&Command::Launch { app: "uniplanner".into() }));
+    assert_eq!(h.state().as_ref().unwrap().settings.launches.get("uniplanner"), Some(&1));
     h.run_steps(4);
-    let word = h.get_by_label("WordCraft details").rect();
+    let word = h.get_by_label("UniPlanner details").rect();
     let light = h.get_by_label("LightCraft details").rect();
     assert!(word.min.y < light.min.y || (word.min.y == light.min.y && word.min.x < light.min.x), "{word:?} {light:?}");
 }
@@ -1967,19 +1967,19 @@ fn an_apps_page_is_a_card_in_the_middle_with_next_and_previous_arrows_and_closes
     h.run_steps(6);
     let headline = |id: &str| AppDetails::by_id(id).unwrap().headline;
     let showing = |h: &Harness<'_, Option<LauncherUi>>, id: &str| h.query_all_by_label_contains(headline(id)).count() >= 2;
-    h.get_by_label("PhotoCraft details").click();
+    h.get_by_label("UniTexto details").click();
     h.run_steps(12);
-    assert!(showing(&h, "photocraft"));
+    assert!(showing(&h, "unitexto"));
     // A card with a margin of window all round, not a panel against one edge.
     let close = h.get_by_label("Close (Esc)").rect();
     assert!(close.right() < 1180.0 - 24.0 && close.left() > 24.0, "{close:?}");
     // Next goes to the following app in the grid's order (Word after Photo), and back again.
     h.get_by_label("Next app").click();
     h.run_steps(12);
-    assert!(showing(&h, "wordcraft"));
+    assert!(showing(&h, "uniplanner"));
     h.get_by_label("Previous app").click();
     h.run_steps(12);
-    assert!(showing(&h, "photocraft"));
+    assert!(showing(&h, "unitexto"));
     // A click on the card's own margin keeps it open (the card is 1116 wide, centred in 1180).
     let margin = egui::pos2(36.0, 450.0);
     h.hover_at(margin);
@@ -1988,7 +1988,7 @@ fn an_apps_page_is_a_card_in_the_middle_with_next_and_previous_arrows_and_closes
     h.run_steps(2);
     h.drop_at(margin);
     h.run_steps(12);
-    assert!(showing(&h, "photocraft"), "a click on the card closed it");
+    assert!(showing(&h, "unitexto"), "a click on the card closed it");
     // A click on the dimmed window outside the card closes it.
     h.hover_at(egui::pos2(10.0, 450.0));
     h.run_steps(2);
@@ -1996,5 +1996,5 @@ fn an_apps_page_is_a_card_in_the_middle_with_next_and_previous_arrows_and_closes
     h.run_steps(2);
     h.drop_at(egui::pos2(10.0, 450.0));
     h.run_steps(30);
-    assert!(!showing(&h, "photocraft"), "a click outside did not close it");
+    assert!(!showing(&h, "unitexto"), "a click outside did not close it");
 }

@@ -190,7 +190,7 @@ fn complete_catalogs_translate_every_tagline() {
 #[test]
 fn product_names_stay_in_english() {
     for lang in Lang::all() {
-        for name in ["ArtCraft Launcher", "Craft App Suite", "Launcher"] {
+        for name in ["Uni Launcher", "Uniphar Indústria Farmacêutica", "Launcher"] {
             assert_eq!(tr(lang, name), name, "{}", lang.code());
         }
     }

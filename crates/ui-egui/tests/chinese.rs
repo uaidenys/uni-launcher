@@ -52,13 +52,13 @@ fn release(id: &str, v: &str, at: i64) -> Release {
         version: version::parse(v),
         name: format!("v{v}"),
         published_at: Some(at),
-        html_url: format!("https://github.com/storytold/{id}/releases/tag/v{v}"),
-        notes: "## What's Changed\n* Faster things by @a in https://github.com/storytold/x/pull/1".into(),
+        html_url: format!("https://github.com/uaidenys/{id}/releases/tag/v{v}"),
+        notes: "## What's Changed\n* Faster things by @a in https://github.com/uaidenys/x/pull/1".into(),
         prerelease: false,
         assets: vec![Asset {
             name: name.clone(),
             size: 150 << 20,
-            url: format!("https://github.com/storytold/{id}/releases/download/v{v}/{name}"),
+            url: format!("https://github.com/uaidenys/{id}/releases/download/v{v}/{name}"),
             sha256: None,
         }],
     }
@@ -68,14 +68,14 @@ fn release(id: &str, v: &str, at: i64) -> Release {
 fn events() -> Vec<Event> {
     let mut ev = Vec::new();
     let versions = [
-        ("photocraft", "0.5.0"),
+        ("unitexto", "0.5.0"),
         ("vectorcraft", "0.7.0"),
         ("filmcraft", "0.4.0"),
         ("lightcraft", "0.4.0"),
         ("pdfcraft", "0.4.0"),
         ("effectcraft", "0.6.0"),
         ("designcraft", "0.4.0"),
-        ("wordcraft", "0.3.0"),
+        ("uniplanner", "0.3.0"),
         ("deckcraft", "0.3.0"),
         ("gridcraft", "0.3.0"),
         ("cadcraft", "0.3.0"),
@@ -88,7 +88,7 @@ fn events() -> Vec<Event> {
         });
     }
     ev.push(Event::Latest { app: "soundcraft".into(), latest: LatestRelease::None, from: Origin::ArtCraftApi });
-    let installed = [("photocraft", "0.4.1"), ("lightcraft", "0.4.0"), ("wordcraft", "0.3.0"), ("effectcraft", "0.5.0")];
+    let installed = [("unitexto", "0.4.1"), ("lightcraft", "0.4.0"), ("uniplanner", "0.3.0"), ("effectcraft", "0.5.0")];
     for app in &SUITE {
         let inst = installed.iter().find(|(id, _)| *id == app.id).map(|(_, v)| Installed {
             version: version::parse(v),
@@ -178,7 +178,7 @@ fn simplified_chinese_switches_persists_and_keeps_install_actions() {
     h.get_by_label("完成").click();
     h.run_steps(3);
     h.get_by_label("图像编辑");
-    h.get_by_label_contains("上次检查：3 分钟前 · 来源：ArtCraft API");
+    h.get_by_label_contains("上次检查：3 分钟前 · 来源：Uniphar API");
     h.get_by_label("更新至 0.5.0");
     // Product names stay in English.
     assert!(h.query_by_label("Launcher").is_none());
@@ -186,7 +186,7 @@ fn simplified_chinese_switches_persists_and_keeps_install_actions() {
     h.get_by_label("全部更新（2）").click();
     h.run_steps(2);
     let installs: Vec<_> = sent.borrow().iter().filter_map(|c| if let Command::Install { app } = c { Some(app.clone()) } else { None }).collect();
-    assert_eq!(installs, ["photocraft", "effectcraft"]);
+    assert_eq!(installs, ["unitexto", "effectcraft"]);
 
     let (mut table, _) = harness_language(ViewMode::Table, egui::Theme::Light, true, &restored.language);
     table.run_steps(6);

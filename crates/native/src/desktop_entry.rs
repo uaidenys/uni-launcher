@@ -14,25 +14,14 @@ use std::path::Path;
 use artcraft_launcher_core::CraftApp;
 
 /// The key that marks an entry as written by the launcher.
-pub const MARKER: &str = "X-ArtCraft-Launcher=true";
+pub const MARKER: &str = "X-Uni Launcher-Launcher=true";
 
 /// The menu categories and the window class each app's own `.desktop` file declares.
 pub fn meta(app: &CraftApp) -> (&'static str, Option<&'static str>) {
     match app.id {
-        "photocraft" => ("Graphics;2DGraphics;RasterGraphics;Photography;", Some("photocraft")),
-        "pdfcraft" => ("Office;Viewer;", Some("pdfcraft")),
-        "lightcraft" => ("Graphics;2DGraphics;RasterGraphics;Photography;", None),
-        "filmcraft" => ("AudioVideo;Video;AudioVideoEditing;", None),
-        "designcraft" => ("Graphics;Publishing;", None),
-        "vectorcraft" => ("Graphics;2DGraphics;VectorGraphics;", None),
-        "effectcraft" => ("AudioVideo;Video;Graphics;2DGraphics;", None),
-        "wordcraft" => ("Office;WordProcessor;", None),
-        "deckcraft" => ("Office;Presentation;", None),
-        "gridcraft" => ("Office;Spreadsheet;", None),
-        "cadcraft" => ("Graphics;Engineering;VectorGraphics;", None),
-        "soundcraft" => ("AudioVideo;Audio;Midi;Mixer;Sequencer;Recorder;", None),
-        "figcraft" => ("Graphics;2DGraphics;VectorGraphics;X-Design;", Some("figcraft")),
-        _ => ("Graphics;", None),
+        "unitexto" => ("Office;WordProcessor;", None),
+        "uniplanner" => ("Office;Spreadsheet;", None),
+        _ => ("Office;", None),
     }
 }
 
@@ -142,20 +131,20 @@ mod tests {
 
     #[test]
     fn writes_a_complete_entry() {
-        let text = render(app("photocraft"), Path::new("/home/ana/Applications/photocraft-0.6.0-linux-x86_64.AppImage"), true).unwrap();
+        let text = render(app("unitexto"), Path::new("/home/ana/Applications/unitexto-0.6.0-linux-x86_64.AppImage"), true).unwrap();
         let expected = format!(
-            "[Desktop Entry]\nType=Application\nName=PhotoCraft\nComment={}\n\
-             Exec=\"/home/ana/Applications/photocraft-0.6.0-linux-x86_64.AppImage\" %F\n\
-             Icon=ai.storyteller.photocraft\nTerminal=false\nCategories=Graphics;2DGraphics;RasterGraphics;Photography;\n\
-             StartupWMClass=photocraft\nX-ArtCraft-Launcher=true\n",
-            app("photocraft").tagline
+            "[Desktop Entry]\nType=Application\nName=UniTexto\nComment={}\n\
+             Exec=\"/home/ana/Applications/unitexto-0.6.0-linux-x86_64.AppImage\" %F\n\
+             Icon=ai.storyteller.unitexto\nTerminal=false\nCategories=Office;WordProcessor;\n\
+             StartupWMClass=ai.storyteller.unitexto\nX-Uni Launcher-Launcher=true\n",
+            app("unitexto").tagline
         );
         assert_eq!(text, expected);
         assert!(is_ours(&text));
-        let no_icon = render(app("wordcraft"), Path::new("/x/w.AppImage"), false).unwrap();
+        let no_icon = render(app("uniplanner"), Path::new("/x/w.AppImage"), false).unwrap();
         assert!(!no_icon.contains("Icon="));
-        assert!(no_icon.contains("StartupWMClass=ai.storyteller.wordcraft\n"));
-        assert!(no_icon.contains("Categories=Office;WordProcessor;\n"));
+        assert!(no_icon.contains("StartupWMClass=ai.storyteller.uniplanner\n"));
+        assert!(no_icon.contains("Categories=Office;Spreadsheet;\n"));
     }
 
     #[test]
@@ -164,20 +153,20 @@ mod tests {
         assert_eq!(exec_quote(Path::new("/a/\"q\" $HOME `x`.AppImage")).unwrap(), r#""/a/\\"q\\" \\$HOME \\`x\\`.AppImage""#);
         assert_eq!(exec_quote(Path::new(r"/a\b/100%.AppImage")).unwrap(), r#""/a\\\\b/100%%.AppImage""#);
         assert_eq!(exec_quote(Path::new("/a/line\nbreak.AppImage")), None);
-        assert!(render(app("photocraft"), Path::new("/a/line\nbreak.AppImage"), true).is_none());
+        assert!(render(app("unitexto"), Path::new("/a/line\nbreak.AppImage"), true).is_none());
     }
 
     #[test]
     fn reads_back_the_program_it_wrote_and_the_apps_own_entries() {
         for p in ["/home/ana/My Apps/p.AppImage", "/a/\"q\" $HOME `x`.AppImage", r"/a\b/100%.AppImage", "/plain.AppImage"] {
-            let text = render(app("gridcraft"), Path::new(p), false).unwrap();
+            let text = render(app("uniplanner"), Path::new(p), false).unwrap();
             assert_eq!(exec_program(&text).map(PathBuf::from), Some(PathBuf::from(p)), "{p}");
         }
-        // PhotoCraft's AppRun writes its own entry, unmarked.
-        let theirs = "[Desktop Entry]\nName=PhotoCraft\nExec=\"/home/ana/Applications/photocraft-0.5.0-linux-x86_64.AppImage\" %F\n";
-        assert_eq!(exec_program(theirs).as_deref(), Some("/home/ana/Applications/photocraft-0.5.0-linux-x86_64.AppImage"));
+        // UniTexto's AppRun writes its own entry, unmarked.
+        let theirs = "[Desktop Entry]\nName=UniTexto\nExec=\"/home/ana/Applications/unitexto-0.5.0-linux-x86_64.AppImage\" %F\n";
+        assert_eq!(exec_program(theirs).as_deref(), Some("/home/ana/Applications/unitexto-0.5.0-linux-x86_64.AppImage"));
         assert!(!is_ours(theirs));
-        assert_eq!(exec_program("[Desktop Entry]\nExec=photocraft %F\n").as_deref(), Some("photocraft"));
+        assert_eq!(exec_program("[Desktop Entry]\nExec=unitexto %F\n").as_deref(), Some("unitexto"));
         assert_eq!(exec_program("[Desktop Entry]\nName=x\n"), None);
     }
 }

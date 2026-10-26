@@ -921,7 +921,7 @@ pub(crate) mod linux {
         let dest = dir.join(name);
         let ours = previous.is_some_and(|r| r.kind == PackageKind::AppImage && r.path == dest);
         if std::fs::symlink_metadata(&dest).is_ok_and(|m| m.is_dir() || !(replace || ours && m.is_file())) {
-            return Err(format!("{} already exists and wasn't installed by ArtCraft Launcher", dest.display()));
+            return Err(format!("{} already exists and wasn't installed by Uni Launcher", dest.display()));
         }
         let staging = super::staging_dir(&dir)?;
         let partial = staging.path().join(name);
@@ -1130,7 +1130,7 @@ pub mod macos {
         Ok(user)
     }
 
-    /// The Apple Developer team that signs every Craft App and ArtCraft Launcher (Learning
+    /// The Apple Developer team that signs every Craft App and Uni Launcher (Learning
     /// Machines LLC): the macOS side of the Windows publisher check.
     pub const TEAM_ID: &str = "DJ6XS33FX8";
 
@@ -1230,7 +1230,7 @@ pub mod macos {
             && std::fs::symlink_metadata(&dest).is_ok()
             && (std::fs::symlink_metadata(&dest).is_ok_and(|m| m.file_type().is_symlink()) || crate::detect::macos::read_bundle(app, &dest).is_none())
         {
-            return Err(format!("{} already exists and wasn't installed by ArtCraft Launcher", dest.display()));
+            return Err(format!("{} already exists and wasn't installed by Uni Launcher", dest.display()));
         }
         let staging = super::staging_dir(&dir)?;
         let staged = staging.path().join(&bundle);
@@ -1535,11 +1535,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let cache = dir.path().join("persistent cache");
         std::fs::create_dir(&cache).unwrap();
-        let file = cache.join("PhotoCraft.msi");
+        let file = cache.join("UniTexto.msi");
         std::fs::write(&file, b"test package").unwrap();
         let link = dir.path().join("current cache");
         std::os::unix::fs::symlink(&cache, &link).unwrap();
-        let command = msi_command(Path::new("msiexec.exe"), &link.join("PhotoCraft.msi")).unwrap();
+        let command = msi_command(Path::new("msiexec.exe"), &link.join("UniTexto.msi")).unwrap();
         let args: Vec<_> = command.get_args().collect();
         assert_eq!(
             args,
@@ -1589,27 +1589,27 @@ mod tests {
         assert!(!missing.exists());
         assert!(selected_folder("relative/folder", true).is_err());
         assert!(selected_folder("bad\nfolder", true).is_err());
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = CraftApp::by_id("unitexto").unwrap();
         let locations = InstallLocations { root: Some(dir.path().display().to_string()), ..Default::default() };
-        assert_eq!(destination(app, PackageKind::Msi, None, None, &locations).unwrap(), Some(dir.path().join("PhotoCraft")));
+        assert_eq!(destination(app, PackageKind::Msi, None, None, &locations).unwrap(), Some(dir.path().join("UniTexto")));
         assert_eq!(destination(app, PackageKind::PortableZip, None, None, &locations).unwrap(), Some(dir.path().to_path_buf()));
-        let old = record("0.5.0", PackageKind::PortableZip, dir.path().join("PhotoCraft/photocraft.exe"), vec![], false);
+        let old = record("0.5.0", PackageKind::PortableZip, dir.path().join("UniTexto/unitexto.exe"), vec![], false);
         let unavailable = InstallLocations { root: Some(dir.path().join("missing").display().to_string()), ..Default::default() };
         assert_eq!(destination(app, PackageKind::PortableZip, None, Some(&old), &unavailable).unwrap(), None);
         let msi = Installed {
             version: None,
             source: InstallSource::Msi,
-            location: dir.path().join("MSI/PhotoCraft/photocraft.exe").display().to_string(),
+            location: dir.path().join("MSI/UniTexto/unitexto.exe").display().to_string(),
             package: None,
         };
-        assert_eq!(destination(app, PackageKind::Msi, Some(&msi), Some(&old), &unavailable).unwrap(), Some(dir.path().join("MSI/PhotoCraft")));
+        assert_eq!(destination(app, PackageKind::Msi, Some(&msi), Some(&old), &unavailable).unwrap(), Some(dir.path().join("MSI/UniTexto")));
         assert!(destination(app, PackageKind::TarGz, None, None, &locations).unwrap_err().contains("aren't supported"));
     }
 
     #[test]
     fn updates_stay_beside_the_launchers_copy_and_new_installs_use_the_chosen_folder() {
         let dir = tempfile::tempdir().unwrap();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = CraftApp::by_id("unitexto").unwrap();
         let path = dir.path().join("old.AppImage");
         let rec = record("0.5.0", PackageKind::AppImage, path.clone(), vec![], false);
         let launcher = Installed { version: None, source: InstallSource::Launcher, location: path.display().to_string(), package: None };
@@ -1630,7 +1630,7 @@ mod tests {
     fn msi_folder_assignment_preserves_spaces_unicode_and_root_separators() {
         for (value, argument) in [
             (r"D:\", r#"INSTALLFOLDER="D:\""#),
-            (r"D:\Craft Apps\PhotoCraft", r#"INSTALLFOLDER="D:\Craft Apps\PhotoCraft""#),
+            (r"D:\Craft Apps\UniTexto", r#"INSTALLFOLDER="D:\Craft Apps\UniTexto""#),
             (r"\\server\apps\绘画", r#"INSTALLFOLDER="\\server\apps\绘画""#),
             (r"D:\Craft Apps\", r#"INSTALLFOLDER="D:\Craft Apps\""#),
         ] {
@@ -1648,23 +1648,23 @@ mod tests {
         std::fs::create_dir(&folder).unwrap();
         let download = dir.path().join("download");
         std::fs::write(&download, "first").unwrap();
-        let unrelated = folder.join("photocraft-unrelated.AppImage");
+        let unrelated = folder.join("unitexto-unrelated.AppImage");
         std::fs::write(&unrelated, "user copy").unwrap();
-        let (old, removed) = linux::install_appimage(&download, "photocraft-0.5.0.AppImage", Some(&folder), None, false).unwrap();
+        let (old, removed) = linux::install_appimage(&download, "unitexto-0.5.0.AppImage", Some(&folder), None, false).unwrap();
         assert!(removed.is_empty());
         assert_eq!(std::fs::read(&old).unwrap(), b"first");
         let rec = record("0.5.0", PackageKind::AppImage, old.clone(), vec![], false);
         std::fs::write(&download, "updated").unwrap();
-        let (new, removed) = linux::install_appimage(&download, "photocraft-0.6.0.AppImage", Some(&folder), Some(&rec), false).unwrap();
-        assert_eq!(new, folder.join("photocraft-0.6.0.AppImage"));
+        let (new, removed) = linux::install_appimage(&download, "unitexto-0.6.0.AppImage", Some(&folder), Some(&rec), false).unwrap();
+        assert_eq!(new, folder.join("unitexto-0.6.0.AppImage"));
         assert_eq!(std::fs::read(&new).unwrap(), b"updated");
         assert_eq!(removed.as_slice(), std::slice::from_ref(&old));
         assert!(!old.exists());
         assert_eq!(std::fs::read(&unrelated).unwrap(), b"user copy");
-        assert!(linux::install_appimage(&download, "photocraft-unrelated.AppImage", Some(&folder), Some(&rec), false).is_err());
+        assert!(linux::install_appimage(&download, "unitexto-unrelated.AppImage", Some(&folder), Some(&rec), false).is_err());
         assert_eq!(std::fs::read(&unrelated).unwrap(), b"user copy");
         let new_rec = record("0.6.0", PackageKind::AppImage, new.clone(), vec![], false);
-        assert!(linux::install_appimage(&download, "photocraft-0.6.0.AppImage", Some(&folder), Some(&new_rec), false).is_ok());
+        assert!(linux::install_appimage(&download, "unitexto-0.6.0.AppImage", Some(&folder), Some(&new_rec), false).is_ok());
         assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 2);
         let link = folder.join("linked.AppImage");
         std::os::unix::fs::symlink(&unrelated, &link).unwrap();
@@ -1681,14 +1681,14 @@ mod tests {
         std::fs::write(&download, "new").unwrap();
         let folder = dir.path().join("Apps");
         std::fs::create_dir(&folder).unwrap();
-        let theirs = folder.join("photocraft.AppImage");
+        let theirs = folder.join("unitexto.AppImage");
         let personal = dir.path().join("personal.txt");
         std::fs::write(&theirs, "user copy").unwrap();
         std::fs::write(&personal, "user file").unwrap();
-        std::os::unix::fs::symlink(&personal, folder.join(".photocraft.AppImage.partial")).unwrap();
-        assert!(linux::install_appimage(&download, "photocraft.AppImage", Some(&folder), None, false).is_err());
+        std::os::unix::fs::symlink(&personal, folder.join(".unitexto.AppImage.partial")).unwrap();
+        assert!(linux::install_appimage(&download, "unitexto.AppImage", Some(&folder), None, false).is_err());
         assert_eq!(std::fs::read(&theirs).unwrap(), b"user copy");
-        linux::install_appimage(&download, "photocraft.AppImage", Some(&folder), None, true).unwrap();
+        linux::install_appimage(&download, "unitexto.AppImage", Some(&folder), None, true).unwrap();
         assert_eq!(std::fs::read(&theirs).unwrap(), b"new");
         assert_eq!(std::fs::read(&personal).unwrap(), b"user file");
         assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 2, "staging was left behind");
@@ -1697,15 +1697,15 @@ mod tests {
     #[test]
     fn a_new_install_reports_what_it_would_write_over() {
         let dir = tempfile::tempdir().unwrap();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = CraftApp::by_id("unitexto").unwrap();
         let paths = Paths::under(dir.path());
         let locations = InstallLocations { root: Some(dir.path().display().to_string()), ..Default::default() };
-        let asset = Asset { name: "photocraft.zip".into(), ..Default::default() };
+        let asset = Asset { name: "unitexto.zip".into(), ..Default::default() };
         let occupied = |previous| occupied(app, &asset, PackageKind::PortableZip, None, previous, &locations, &paths).unwrap();
         assert_eq!(occupied(None), None);
-        std::fs::create_dir(dir.path().join("photocraft")).unwrap();
-        assert_eq!(occupied(None), Some(dir.path().join("photocraft")));
-        let old = record("0.5.0", PackageKind::PortableZip, dir.path().join("photocraft/photocraft.exe"), vec![], false);
+        std::fs::create_dir(dir.path().join("unitexto")).unwrap();
+        assert_eq!(occupied(None), Some(dir.path().join("unitexto")));
+        let old = record("0.5.0", PackageKind::PortableZip, dir.path().join("unitexto/unitexto.exe"), vec![], false);
         assert_eq!(occupied(Some(&old)), None);
     }
 
@@ -1806,10 +1806,10 @@ mod tests {
     #[test]
     fn a_failed_install_keeps_the_download_for_the_next_try() {
         use crate::http::tests::{Reply, body, serve};
-        let app = CraftApp::by_id("wordcraft").unwrap();
+        let app = CraftApp::by_id("uniplanner").unwrap();
         let (body, sha) = body();
         let (url, requests) = serve(body.clone(), vec![Reply::Full, Reply::Full]);
-        let asset = Asset { name: "wordcraft-0.3.0-test.pkg".into(), size: body.len() as u64, url, sha256: Some(sha) };
+        let asset = Asset { name: "uniplanner-0.3.0-test.pkg".into(), size: body.len() as u64, url, sha256: Some(sha) };
         let release = Release { assets: vec![asset.clone()], ..Release::default() };
         let dir = tempfile::tempdir().unwrap();
         let paths = Paths::under(dir.path());
@@ -1838,10 +1838,10 @@ mod tests {
     #[test]
     fn an_unavailable_custom_folder_is_rejected_before_downloading() {
         use crate::http::tests::{Reply, body, serve};
-        let app = CraftApp::by_id("wordcraft").unwrap();
+        let app = CraftApp::by_id("uniplanner").unwrap();
         let (body, sha) = body();
         let (url, requests) = serve(body.clone(), vec![Reply::Full]);
-        let asset = Asset { name: "wordcraft-0.3.0-linux-x86_64.AppImage".into(), size: body.len() as u64, url, sha256: Some(sha) };
+        let asset = Asset { name: "uniplanner-0.3.0-linux-x86_64.AppImage".into(), size: body.len() as u64, url, sha256: Some(sha) };
         let release = Release { assets: vec![asset.clone()], ..Release::default() };
         let dir = tempfile::tempdir().unwrap();
         let missing = dir.path().join("unavailable/Apps");
@@ -1861,11 +1861,11 @@ mod tests {
     #[test]
     fn a_release_without_a_checksum_is_refused_before_anything_is_fetched() {
         use crate::http::tests::{Reply, body, serve};
-        let app = CraftApp::by_id("wordcraft").unwrap();
+        let app = CraftApp::by_id("uniplanner").unwrap();
         let (body, _) = body();
         let (url, requests) = serve(body.clone(), vec![Reply::Full]);
         // Neither a per-file digest nor a SHA256SUMS.txt in the release.
-        let asset = Asset { name: "wordcraft-0.3.1-test.pkg".into(), size: body.len() as u64, url, sha256: None };
+        let asset = Asset { name: "uniplanner-0.3.1-test.pkg".into(), size: body.len() as u64, url, sha256: None };
         let release = Release { assets: vec![asset.clone()], ..Release::default() };
         let dir = tempfile::tempdir().unwrap();
         let paths = Paths::under(dir.path());
@@ -1905,29 +1905,29 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn lays_out_both_freebsd_tarball_styles_like_usr_local() {
-        let app = CraftApp::by_id("wordcraft").unwrap();
+        let app = CraftApp::by_id("uniplanner").unwrap();
         let dir = tempfile::tempdir().unwrap();
         let tree_style = dir.path().join("tree.tar.gz");
         tarball(
             &tree_style,
-            &["wordcraft-0.3.0-freebsd-x86_64/bin/wordcraft", "wordcraft-0.3.0-freebsd-x86_64/share/applications/ai.storyteller.wordcraft.desktop"],
+            &["uniplanner-0.3.0-freebsd-x86_64/bin/uniplanner", "uniplanner-0.3.0-freebsd-x86_64/share/applications/ai.storyteller.uniplanner.desktop"],
         );
         let flat_style = dir.path().join("flat.tar.gz");
         tarball(
             &flat_style,
             &[
-                "wordcraft-0.3.0-freebsd-x86_64/wordcraft",
-                "wordcraft-0.3.0-freebsd-x86_64/wordcraft-cli",
-                "wordcraft-0.3.0-freebsd-x86_64/README.md",
-                "wordcraft-0.3.0-freebsd-x86_64/ai.storyteller.wordcraft.desktop",
-                "wordcraft-0.3.0-freebsd-x86_64/ai.storyteller.wordcraft.png",
+                "uniplanner-0.3.0-freebsd-x86_64/uniplanner",
+                "uniplanner-0.3.0-freebsd-x86_64/uniplanner-cli",
+                "uniplanner-0.3.0-freebsd-x86_64/README.md",
+                "uniplanner-0.3.0-freebsd-x86_64/ai.storyteller.uniplanner.desktop",
+                "uniplanner-0.3.0-freebsd-x86_64/ai.storyteller.uniplanner.png",
             ],
         );
         for file in [tree_style, flat_style] {
             let root = tree::unpack(app, &file, &dir.path().join("staging")).unwrap();
             let files = tree::files(&root);
-            assert!(files.contains(&PathBuf::from("bin/wordcraft")), "{files:?}");
-            assert!(files.contains(&PathBuf::from("share/applications/ai.storyteller.wordcraft.desktop")), "{files:?}");
+            assert!(files.contains(&PathBuf::from("bin/uniplanner")), "{files:?}");
+            assert!(files.contains(&PathBuf::from("share/applications/ai.storyteller.uniplanner.desktop")), "{files:?}");
             assert!(!files.iter().any(|f| f.ends_with("README.md")), "{files:?}");
         }
         let bad = dir.path().join("bad.tar.gz");
@@ -1938,44 +1938,44 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn a_tarball_install_lives_in_the_launchers_folder_and_keeps_the_apps_home() {
-        let app = CraftApp::by_id("wordcraft").unwrap();
+        let app = CraftApp::by_id("uniplanner").unwrap();
         let dir = tempfile::tempdir().unwrap();
         let paths = Paths::under(dir.path());
-        let file = dir.path().join("wordcraft-0.3.0-linux-x86_64.tar.gz");
+        let file = dir.path().join("uniplanner-0.3.0-linux-x86_64.tar.gz");
         tarball(
             &file,
             &[
-                "wordcraft-0.3.0-linux-x86_64/bin/wordcraft",
-                "wordcraft-0.3.0-linux-x86_64/bin/wordcraft-cli",
-                "wordcraft-0.3.0-linux-x86_64/share/applications/ai.storyteller.wordcraft.desktop",
+                "uniplanner-0.3.0-linux-x86_64/bin/uniplanner",
+                "uniplanner-0.3.0-linux-x86_64/bin/uniplanner-cli",
+                "uniplanner-0.3.0-linux-x86_64/share/applications/ai.storyteller.uniplanner.desktop",
             ],
         );
 
         let bin = linux::install_tree(app, &file, &paths).unwrap();
-        let root = paths.apps().join("wordcraft");
-        assert_eq!(bin, root.join("bin").join("wordcraft"));
+        let root = paths.apps().join("uniplanner");
+        assert_eq!(bin, root.join("bin").join("uniplanner"));
         assert!(bin.is_file(), "the app's binary wasn't unpacked");
-        assert!(root.join("share/applications/ai.storyteller.wordcraft.desktop").is_file(), "share/ wasn't unpacked");
-        assert!(!paths.cache.join("wordcraft.new").exists(), "the staging folder was left behind");
+        assert!(root.join("share/applications/ai.storyteller.uniplanner.desktop").is_file(), "share/ wasn't unpacked");
+        assert!(!paths.cache.join("uniplanner.new").exists(), "the staging folder was left behind");
 
         // The app's own home sits beside the tree, and an update keeps it.
         let home = paths.app_home(app.id);
-        std::fs::create_dir_all(home.join(".config/wordcraft")).unwrap();
-        std::fs::write(home.join(".config/wordcraft/settings.toml"), "keep me").unwrap();
+        std::fs::create_dir_all(home.join(".config/uniplanner")).unwrap();
+        std::fs::write(home.join(".config/uniplanner/settings.toml"), "keep me").unwrap();
         linux::install_tree(app, &file, &paths).unwrap();
-        assert_eq!(std::fs::read_to_string(home.join(".config/wordcraft/settings.toml")).unwrap(), "keep me");
+        assert_eq!(std::fs::read_to_string(home.join(".config/uniplanner/settings.toml")).unwrap(), "keep me");
 
         // Removing the install takes the tree and nothing else.
         linux::remove_tree(app, &paths).unwrap();
         assert!(!bin.exists() && !root.join("share").exists());
-        assert!(home.join(".config/wordcraft/settings.toml").is_file(), "the app's settings were removed with it");
+        assert!(home.join(".config/uniplanner/settings.toml").is_file(), "the app's settings were removed with it");
         assert!(linux::remove_tree(app, &paths).is_err(), "a second removal says there is nothing there");
     }
 
     #[cfg(target_os = "linux")]
     #[test]
     fn an_app_sees_its_own_home_and_the_xdg_folders_inside_it() {
-        let home = PathBuf::from("/data/apps/photocraft/home");
+        let home = PathBuf::from("/data/apps/unitexto/home");
         let env = home_env(&home);
         assert_eq!(env[0], ("HOME", home.clone()));
         for (name, dir) in &env[1..] {
@@ -2091,13 +2091,13 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn adds_and_removes_only_its_own_menu_entry_and_icon() {
-        let app = CraftApp::by_id("wordcraft").unwrap();
+        let app = CraftApp::by_id("uniplanner").unwrap();
         let root = tempfile::tempdir().unwrap();
         let data = root.path().join("share");
-        let desktop = data.join("applications/ai.storyteller.wordcraft.desktop");
-        let icon = data.join("icons/hicolor/128x128/apps/ai.storyteller.wordcraft.png");
-        let old = root.path().join("My Apps/wordcraft-0.2.0-linux-x86_64.AppImage");
-        let new = root.path().join("My Apps/wordcraft-0.3.0-linux-x86_64.AppImage");
+        let desktop = data.join("applications/ai.storyteller.uniplanner.desktop");
+        let icon = data.join("icons/hicolor/128x128/apps/ai.storyteller.uniplanner.png");
+        let old = root.path().join("My Apps/uniplanner-0.2.0-linux-x86_64.AppImage");
+        let new = root.path().join("My Apps/uniplanner-0.3.0-linux-x86_64.AppImage");
         std::fs::create_dir_all(new.parent().unwrap()).unwrap();
         std::fs::write(&new, b"").unwrap();
 
@@ -2105,8 +2105,8 @@ mod tests {
         let files = linux::integrate_into(&data, app, &new, &[], None);
         assert_eq!(files, [icon.clone(), desktop.clone()]);
         let text = std::fs::read_to_string(&desktop).unwrap();
-        assert!(text.contains("Exec=\"") && text.contains("My Apps/wordcraft-0.3.0-linux-x86_64.AppImage\" %F\n"), "{text}");
-        assert!(text.contains("Icon=ai.storyteller.wordcraft\n"));
+        assert!(text.contains("Exec=\"") && text.contains("My Apps/uniplanner-0.3.0-linux-x86_64.AppImage\" %F\n"), "{text}");
+        assert!(text.contains("Icon=ai.storyteller.uniplanner\n"));
         assert!(std::fs::read(&icon).unwrap().starts_with(b"\x89PNG"));
         let rec = record("0.3.0", PackageKind::AppImage, new.clone(), files, false);
 
@@ -2114,7 +2114,7 @@ mod tests {
         assert_eq!(linux::integrate_into(&data, app, &new, &[], Some(&rec)).len(), 2);
 
         // Someone else's entry and icon are left alone (and not recorded).
-        std::fs::write(&desktop, "[Desktop Entry]\nExec=/usr/bin/wordcraft\n").unwrap();
+        std::fs::write(&desktop, "[Desktop Entry]\nExec=/usr/bin/uniplanner\n").unwrap();
         std::fs::write(&icon, b"theirs").unwrap();
         assert!(linux::integrate_into(&data, app, &new, &[], None).is_empty());
         assert_eq!(std::fs::read(&icon).unwrap(), b"theirs");
@@ -2137,7 +2137,7 @@ mod tests {
         linux::unintegrate_from(&data, app, &new, Some(&rec));
         assert!(!desktop.exists() && !icon.exists());
         // Someone else's entry survives an uninstall.
-        std::fs::write(&desktop, "[Desktop Entry]\nExec=/usr/bin/wordcraft\n").unwrap();
+        std::fs::write(&desktop, "[Desktop Entry]\nExec=/usr/bin/uniplanner\n").unwrap();
         linux::unintegrate_from(&data, app, &new, Some(&rec));
         assert!(desktop.exists());
     }
@@ -2162,7 +2162,7 @@ mod tests {
     #[test]
     fn updates_keep_the_installed_format() {
         let inst = |source| Installed { version: None, source, location: String::new(), package: None };
-        let app = artcraft_launcher_core::CraftApp::by_id("photocraft").unwrap();
+        let app = artcraft_launcher_core::CraftApp::by_id("unitexto").unwrap();
         let available = available_kinds();
         if let Some(first) = available.first() {
             assert_eq!(choose_kinds(app, None, None, &[]).first(), Some(first));
@@ -2179,28 +2179,28 @@ mod tests {
     #[test]
     fn only_the_release_arch_package_is_updated_by_the_launcher() {
         let pacman = |name: &str| Installed { version: None, source: InstallSource::Pacman, location: String::new(), package: Some(name.into()) };
-        let app = artcraft_launcher_core::CraftApp::by_id("wordcraft").unwrap();
-        assert!(is_release_arch_package(app, &pacman("ai.storyteller.wordcraft")));
-        for aur in ["wordcraft", "wordcraft-bin", "wordcraft-git"] {
+        let app = artcraft_launcher_core::CraftApp::by_id("uniplanner").unwrap();
+        assert!(is_release_arch_package(app, &pacman("ai.storyteller.uniplanner")));
+        for aur in ["uniplanner", "uniplanner-bin", "uniplanner-git"] {
             assert!(!is_release_arch_package(app, &pacman(aur)), "{aur}");
         }
-        assert_eq!(managed_elsewhere_with(app, &pacman("ai.storyteller.wordcraft"), false, |_| None), None);
-        assert_eq!(managed_elsewhere_with(app, &pacman("wordcraft-bin"), true, |_| None), None);
+        assert_eq!(managed_elsewhere_with(app, &pacman("ai.storyteller.uniplanner"), false, |_| None), None);
+        assert_eq!(managed_elsewhere_with(app, &pacman("uniplanner-bin"), true, |_| None), None);
     }
 
     #[test]
     fn arch_packages_from_a_repository_are_updated_with_the_system() {
-        let app = artcraft_launcher_core::CraftApp::by_id("wordcraft").unwrap();
-        let hint = pacman_update_hint(app, "wordcraft-bin", Some("omarchy"));
-        assert!(hint.starts_with("WordCraft was installed from the omarchy repository or the AUR (wordcraft-bin)."));
+        let app = artcraft_launcher_core::CraftApp::by_id("uniplanner").unwrap();
+        let hint = pacman_update_hint(app, "uniplanner-bin", Some("omarchy"));
+        assert!(hint.starts_with("UniPlanner was installed from the omarchy repository or the AUR (uniplanner-bin)."));
         assert!(hint.ends_with("or sudo pacman -Syu"));
 
-        let aur_hint = pacman_update_hint(app, "wordcraft-bin", None);
-        assert!(aur_hint.starts_with("WordCraft was installed from the AUR (wordcraft-bin)."));
+        let aur_hint = pacman_update_hint(app, "uniplanner-bin", None);
+        assert!(aur_hint.starts_with("UniPlanner was installed from the AUR (uniplanner-bin)."));
 
-        let si = "Repository      : omarchy\nName            : wordcraft-bin\nVersion         : 0.6.1-1\n";
+        let si = "Repository      : omarchy\nName            : uniplanner-bin\nVersion         : 0.6.1-1\n";
         assert_eq!(parse_pacman_repo(si).as_deref(), Some("omarchy"));
-        assert_eq!(parse_pacman_repo("Name : wordcraft-bin\n"), None);
+        assert_eq!(parse_pacman_repo("Name : uniplanner-bin\n"), None);
         assert_eq!(parse_pacman_repo("Repository :\n"), None);
     }
 
@@ -2239,13 +2239,13 @@ mod tests {
         let http = Http::new().unwrap();
         let phase = &mut |_| ();
         let locations = InstallLocations::default();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = CraftApp::by_id("unitexto").unwrap();
         let release = Release { version: version::parse("0.4.0"), tag: "v0.4.0".into(), ..Release::default() };
-        let asset = Asset { name: "photocraft-0.4.0-linux-x86_64.AppImage".into(), ..Asset::default() };
+        let asset = Asset { name: "unitexto-0.4.0-linux-x86_64.AppImage".into(), ..Asset::default() };
         let installed = Installed {
             version: version::parse("0.5.0"),
             source: InstallSource::Launcher,
-            location: dir.path().join("PhotoCraft.AppImage").display().to_string(),
+            location: dir.path().join("UniTexto.AppImage").display().to_string(),
             package: None,
         };
         let stop = Stop::default();
@@ -2307,37 +2307,37 @@ mod tests {
         use super::macos::{Expect, TEAM_ID, install_dmg, signed_by};
         use super::*;
 
-        fn photocraft() -> &'static CraftApp {
-            SUITE.iter().find(|a| a.id == "photocraft").unwrap()
+        fn unitexto() -> &'static CraftApp {
+            SUITE.iter().find(|a| a.id == "unitexto").unwrap()
         }
 
-        /// A minimal `PhotoCraft.app` at `dir`, reporting `version`.
+        /// A minimal `UniTexto.app` at `dir`, reporting `version`.
         fn bundle(dir: &Path, version: &str) -> PathBuf {
-            let app = dir.join("PhotoCraft.app");
+            let app = dir.join("UniTexto.app");
             let contents = app.join("Contents");
             std::fs::create_dir_all(contents.join("MacOS")).unwrap();
             std::fs::write(
                 contents.join("Info.plist"),
                 format!(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>\
-                     <key>CFBundleIdentifier</key><string>ai.storyteller.photocraft</string>\
-                     <key>CFBundleExecutable</key><string>PhotoCraft</string>\
+                     <key>CFBundleIdentifier</key><string>ai.storyteller.unitexto</string>\
+                     <key>CFBundleExecutable</key><string>UniTexto</string>\
                      <key>CFBundleShortVersionString</key><string>{version}</string></dict></plist>"
                 ),
             )
             .unwrap();
-            std::fs::write(contents.join("MacOS/PhotoCraft"), version).unwrap();
+            std::fs::write(contents.join("MacOS/UniTexto"), version).unwrap();
             app
         }
 
-        /// A release-style disk image holding a `PhotoCraft.app` that reports `version`.
+        /// A release-style disk image holding a `UniTexto.app` that reports `version`.
         fn dmg(dir: &Path, version: &str) -> PathBuf {
             let src = dir.join(format!("src-{version}"));
             bundle(&src, version);
-            let dmg = dir.join(format!("photocraft-{version}-macos-universal.dmg"));
+            let dmg = dir.join(format!("unitexto-{version}-macos-universal.dmg"));
             let _one_at_a_time = super::macos::DISK_IMAGES.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let ok = std::process::Command::new("hdiutil")
-                .args(["create", "-quiet", "-format", "UDZO", "-volname", "PhotoCraft", "-srcfolder"])
+                .args(["create", "-quiet", "-format", "UDZO", "-volname", "UniTexto", "-srcfolder"])
                 .arg(&src)
                 .arg(&dmg)
                 .status()
@@ -2355,25 +2355,25 @@ mod tests {
             let paths = Paths::under(dir.path());
             let image = dmg(dir.path(), "0.6.0");
             let expect = Expect { team: None, version: None };
-            let placed = install_dmg(photocraft(), &image, None, Some(&apps), false, &paths, &expect).unwrap();
-            assert_eq!(placed, apps.join("PhotoCraft.app"));
+            let placed = install_dmg(unitexto(), &image, None, Some(&apps), false, &paths, &expect).unwrap();
+            assert_eq!(placed, apps.join("UniTexto.app"));
             let mut manifest = crate::manifest::Manifest::default();
-            manifest.apps.insert("photocraft".into(), record("0.6.0", PackageKind::Dmg, placed.clone(), vec![], false));
-            let existing = crate::detect::detect(photocraft(), &manifest, &crate::detect::Snapshot::default()).unwrap();
+            manifest.apps.insert("unitexto".into(), record("0.6.0", PackageKind::Dmg, placed.clone(), vec![], false));
+            let existing = crate::detect::detect(unitexto(), &manifest, &crate::detect::Snapshot::default()).unwrap();
             assert_eq!(existing.source, InstallSource::MacApp);
             assert_eq!(existing.location, placed.display().to_string());
             assert_eq!(existing.version.unwrap().to_string(), "0.6.0");
-            let existing = crate::detect::detect(photocraft(), &manifest, &crate::detect::Snapshot::default()).unwrap();
+            let existing = crate::detect::detect(unitexto(), &manifest, &crate::detect::Snapshot::default()).unwrap();
             let new_default = dir.path().join("Other Apps");
             std::fs::create_dir(&new_default).unwrap();
             let update = dmg(dir.path(), "0.7.0");
-            assert_eq!(install_dmg(photocraft(), &update, Some(&existing), Some(&new_default), false, &paths, &expect).unwrap(), placed);
-            assert!(!new_default.join("PhotoCraft.app").exists());
-            let detected = crate::detect::detect(photocraft(), &manifest, &crate::detect::Snapshot::default()).unwrap();
+            assert_eq!(install_dmg(unitexto(), &update, Some(&existing), Some(&new_default), false, &paths, &expect).unwrap(), placed);
+            assert!(!new_default.join("UniTexto.app").exists());
+            let detected = crate::detect::detect(unitexto(), &manifest, &crate::detect::Snapshot::default()).unwrap();
             assert_eq!(detected.version.unwrap().to_string(), "0.7.0");
             std::fs::write(placed.join("Contents/Info.plist"), "invalid").unwrap();
             assert_ne!(
-                crate::detect::detect(photocraft(), &manifest, &crate::detect::Snapshot::default()).map(|i| i.source),
+                crate::detect::detect(unitexto(), &manifest, &crate::detect::Snapshot::default()).map(|i| i.source),
                 Some(InstallSource::Launcher)
             );
         }
@@ -2383,14 +2383,14 @@ mod tests {
             let dir = tempfile::tempdir().unwrap();
             let placed = bundle(dir.path(), "0.5.0");
             let plist = placed.join("Contents/Info.plist");
-            let unrelated = std::fs::read_to_string(&plist).unwrap().replace("ai.storyteller.photocraft", "com.example.other");
+            let unrelated = std::fs::read_to_string(&plist).unwrap().replace("ai.storyteller.unitexto", "com.example.other");
             std::fs::write(&plist, &unrelated).unwrap();
             let image = dmg(dir.path(), "0.6.0");
             let result =
-                install_dmg(photocraft(), &image, None, Some(dir.path()), false, &Paths::under(dir.path()), &Expect { team: None, version: None });
+                install_dmg(unitexto(), &image, None, Some(dir.path()), false, &Paths::under(dir.path()), &Expect { team: None, version: None });
             assert!(result.unwrap_err().contains("already exists"));
             assert_eq!(std::fs::read_to_string(plist).unwrap(), unrelated);
-            assert_eq!(std::fs::read(placed.join("Contents/MacOS/PhotoCraft")).unwrap(), b"0.5.0");
+            assert_eq!(std::fs::read(placed.join("Contents/MacOS/UniTexto")).unwrap(), b"0.5.0");
         }
 
         #[test]
@@ -2419,19 +2419,19 @@ mod tests {
             let image = dmg(dir.path(), "0.6.0");
 
             for (release, ok) in [("0.6.0", true), ("0.7.0", false), ("0.6.0-rc.1", true), ("0.5.0", false)] {
-                std::fs::write(current.join("Contents/MacOS/PhotoCraft"), "0.5.0").unwrap();
+                std::fs::write(current.join("Contents/MacOS/UniTexto"), "0.5.0").unwrap();
                 let want = version::parse(release).unwrap();
                 let expect = Expect { team: None, version: Some(&want) };
-                let result = install_dmg(photocraft(), &image, Some(&existing), None, false, &paths, &expect);
+                let result = install_dmg(unitexto(), &image, Some(&existing), None, false, &paths, &expect);
                 assert_eq!(result.is_ok(), ok, "release {release}: {result:?}");
-                let now = std::fs::read_to_string(current.join("Contents/MacOS/PhotoCraft")).unwrap();
+                let now = std::fs::read_to_string(current.join("Contents/MacOS/UniTexto")).unwrap();
                 assert_eq!(now, if ok { "0.6.0" } else { "0.5.0" }, "release {release}");
                 if !ok {
                     assert_eq!(result, Err(format!("the app inside isn't version {release}, so it wasn't installed")));
                 }
                 assert_eq!(
                     std::fs::read_dir(&apps).unwrap().map(|e| e.unwrap().file_name()).collect::<Vec<_>>(),
-                    [std::ffi::OsString::from("PhotoCraft.app")]
+                    [std::ffi::OsString::from("UniTexto.app")]
                 );
             }
 
@@ -2439,7 +2439,7 @@ mod tests {
             let rc = dmg(dir.path(), "0.8.0-rc.2");
             let want = version::parse("0.8.0-rc.1").unwrap();
             let expect = Expect { team: None, version: Some(&want) };
-            assert!(install_dmg(photocraft(), &rc, Some(&existing), None, false, &paths, &expect).is_err());
+            assert!(install_dmg(unitexto(), &rc, Some(&existing), None, false, &paths, &expect).is_err());
         }
 
         #[test]
@@ -2451,16 +2451,16 @@ mod tests {
             let image = dmg(dir.path(), "0.6.0");
             let release = Release { tag: "v0.6.0".into(), version: version::parse("0.6.0"), ..Release::default() };
 
-            let result = install_dmg(photocraft(), &image, Some(&existing), None, false, &Paths::under(dir.path()), &Expect::release(&release));
+            let result = install_dmg(unitexto(), &image, Some(&existing), None, false, &Paths::under(dir.path()), &Expect::release(&release));
             assert_eq!(result, Err("the app isn't signed by its developer, so it wasn't installed".into()));
-            assert_eq!(std::fs::read_to_string(current.join("Contents/MacOS/PhotoCraft")).unwrap(), "0.5.0");
+            assert_eq!(std::fs::read_to_string(current.join("Contents/MacOS/UniTexto")).unwrap(), "0.5.0");
             assert_eq!(
                 std::fs::read_dir(&apps).unwrap().map(|e| e.unwrap().file_name()).collect::<Vec<_>>(),
-                [std::ffi::OsString::from("PhotoCraft.app")]
+                [std::ffi::OsString::from("UniTexto.app")]
             );
         }
 
-        /// A real release passes. Run with `CRAFT_APP=/path/to/PhotoCraft.app cargo test -p
+        /// A real release passes. Run with `CRAFT_APP=/path/to/UniTexto.app cargo test -p
         /// artcraft-launcher-native -- --ignored a_real_craft_app`.
         #[test]
         #[ignore = "needs a Craft App from a real release"]

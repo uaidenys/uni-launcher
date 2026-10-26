@@ -13,10 +13,10 @@ fn main() {
     }
     let mut res = winresource::WindowsResource::new();
     res.set_icon("../../assets/app-icon/artcraft-launcher.ico")
-        .set("ProductName", "ArtCraft Launcher")
-        .set("FileDescription", "ArtCraft Launcher")
-        .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) the ArtCraft Launcher authors. MIT OR Apache-2.0.")
+        .set("ProductName", "Uni Launcher")
+        .set("FileDescription", "Uni Launcher")
+        .set("CompanyName", "Denys Rodrigues de Oliveira")
+        .set("LegalCopyright", "Copyright (c) Denys Rodrigues de Oliveira. Based on ArtCraft Launcher (MIT OR Apache-2.0).")
         .set("OriginalFilename", "artcraft-launcher.exe")
         .set("InternalName", "artcraft-launcher");
     if let Err(e) = res.compile() {

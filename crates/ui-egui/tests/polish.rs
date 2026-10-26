@@ -47,13 +47,13 @@ fn release(id: &str, v: &str, at: i64) -> Release {
         version: version::parse(v),
         name: format!("v{v}"),
         published_at: Some(at),
-        html_url: format!("https://github.com/storytold/{id}/releases/tag/v{v}"),
+        html_url: format!("https://github.com/uaidenys/{id}/releases/tag/v{v}"),
         notes: String::new(),
         prerelease: false,
         assets: vec![Asset {
             name: name.clone(),
             size: 150 << 20,
-            url: format!("https://github.com/storytold/{id}/releases/download/v{v}/{name}"),
+            url: format!("https://github.com/uaidenys/{id}/releases/download/v{v}/{name}"),
             sha256: None,
         }],
     }
@@ -64,8 +64,8 @@ fn events() -> Vec<Event> {
     for (i, app) in SUITE.iter().enumerate() {
         let latest = LatestRelease::Found(release(app.id, "0.5.0", NOW - 40 * 86_400 - i as i64 * 600));
         ev.push(Event::Latest { app: app.id.into(), latest, from: Origin::ArtCraftApi });
-        let installed = matches!(app.id, "photocraft" | "lightcraft").then(|| Installed {
-            version: version::parse(if app.id == "photocraft" { "0.4.1" } else { "0.5.0" }),
+        let installed = matches!(app.id, "unitexto" | "lightcraft").then(|| Installed {
+            version: version::parse(if app.id == "unitexto" { "0.4.1" } else { "0.5.0" }),
             source: InstallSource::MacApp,
             location: format!("/Applications/{}.app", app.name),
             package: None,
@@ -114,11 +114,11 @@ fn polish_ui_translates_labels_dates_and_messages() {
     snapshot(&mut h, "grid-pl-dark");
     // Product names stay in English.
     assert!(h.query_by_label("Launcher").is_none());
-    h.get_by_label("Craft App Suite");
+    h.get_by_label("Uniphar Indústria Farmacêutica");
     h.get_by_label("Edycja zdjęć");
     h.get_by_label("Zaktualizuj do 0.5.0");
     h.get_by_label_contains("Weryfikowanie sumy kontrolnej…");
-    h.get_by_label_contains("Ostatnio sprawdzono 3 min temu · przy użyciu ArtCraft API");
+    h.get_by_label_contains("Ostatnio sprawdzono 3 min temu · przy użyciu Uniphar API");
     h.get_by_label("Zaktualizowano LightCraft do wersji 0.5.0");
 
     let mut table = harness(ViewMode::Table);

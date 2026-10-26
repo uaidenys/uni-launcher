@@ -47,11 +47,13 @@ enum Primary {
 }
 
 /// Height of the header bar (the site's nav).
-pub(crate) const HEADER_H: f32 = 48.0;
+pub(crate) const HEADER_H: f32 = 64.0;
 /// Height of the footer bar.
-pub(crate) const FOOTER_H: f32 = 34.0;
+pub(crate) const FOOTER_H: f32 = 40.0;
 
-const CARD_MIN_W: f32 = 320.0;
+const CARD_MIN_W: f32 = 300.0;
+/// Room between the rounded cards.
+const CARD_GAP: f32 = 20.0;
 const CARD_H: f32 = 314.0;
 /// The card's top strip: number tab and links.
 const STRIP_H: f32 = 40.0;
@@ -72,10 +74,13 @@ impl LauncherUi {
             if bar == TitleBar::MacOs {
                 ui.add_space(TRAFFIC_LIGHTS_W);
             }
-            // The ArtCraft wordmark exactly as supplied, in its own cell.
-            let logo = vec2(14.0 * crate::icons::ARTCRAFT_LOGO_ASPECT, 14.0);
-            let (cell, _) = ui.allocate_exact_size(vec2(logo.x + 40.0, h), Sense::hover());
-            egui::Image::new(crate::icons::artcraft_logo(t.dark)).alt_text(tl!("ArtCraft")).paint_at(ui, Rect::from_center_size(cell.center(), logo));
+            // A greeting by the time of day; the brand itself sits in the side menu.
+            let now = self.backend.now();
+            let hour = ((now + crate::local_time::offset(now)).rem_euclid(86_400) / 3600) as u32;
+            let hello = crate::sidebar::greeting(hour);
+            let mark = ui.painter().layout_no_wrap(hello, egui::FontId::new(20.0, theme::semibold()), t.ink);
+            let (cell, _) = ui.allocate_exact_size(vec2(mark.size().x + 40.0, h), Sense::hover());
+            ui.painter().galley(egui::pos2(cell.left() + 20.0, cell.center().y - mark.size().y / 2.0), mark, t.ink);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if bar == TitleBar::Custom {
                     widgets::window_buttons(ui, h);
@@ -85,10 +90,10 @@ impl LauncherUi {
                 }
                 // The controls reserve their actual widths before the secondary text gets space.
                 ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-                    if ui.available_width() >= 17.0 + widgets::hud_galley(ui, tl!("Craft App Suite"), t.muted).size().x {
+                    if ui.available_width() >= 17.0 + widgets::hud_galley(ui, tl!("Uniphar Indústria Farmacêutica"), t.muted).size().x {
                         widgets::rule(ui, h);
                         ui.add_space(16.0);
-                        widgets::hud(ui, tl!("Craft App Suite"), t.muted);
+                        widgets::hud(ui, tl!("Uniphar Indústria Farmacêutica"), t.muted);
                     }
                 });
             });
@@ -112,7 +117,7 @@ impl LauncherUi {
                         widgets::tag(ui, tl!("Update"), t.accent, Color32::WHITE);
                         ui.add_space(4.0);
                         ui.label(
-                            RichText::new(fmt(tl!("ArtCraft Launcher {version} is available."), &[("version", &r.version_label())]))
+                            RichText::new(fmt(tl!("Uni Launcher {version} is available."), &[("version", &r.version_label())]))
                                 .family(theme::medium())
                                 .color(t.ink_strong),
                         );
@@ -260,7 +265,7 @@ impl LauncherUi {
         }
     }
 
-    /// News from ArtCraft's release feed (and app renames), until the user dismisses each.
+    /// News from Uni Launcher's release feed (and app renames), until the user dismisses each.
     fn announcements(&mut self, ui: &mut Ui) {
         let t = Tokens::get(ui.ctx());
         let shown: Vec<artcraft_launcher_core::feed::Notice> =
@@ -312,32 +317,21 @@ impl LauncherUi {
             let short = fmt(tl!("GitHub limit hit; back in {min} min"), &[("min", &min)]);
             (format!("· {full}"), format!("· {short}"))
         });
-        use artcraft_launcher_core::catalog::{GITHUB_URL, SOCIAL, WEBSITE_URL};
-        // Every link is an icon, reading Website, GitHub, Discord, then the social accounts.
-        let named =
-            |name: &'static str, label: &str, url: &'static str| widgets::IconLink { name, label: label.to_string(), tip: label.to_string(), url };
+        use artcraft_launcher_core::catalog::{GITHUB_URL, SAC_PHONE, SOCIAL, WEBSITE_URL};
+        // Every link is an icon: Uniphar's website, the apps' GitHub, then Uniphar's social accounts.
         let mut links = vec![
-            named("Website", tl!("Website"), WEBSITE_URL),
-            named("GitHub", tl!("GitHub"), GITHUB_URL),
-            widgets::IconLink {
-                name: "Discord",
-                label: tl!("Discord").to_string(),
-                tip: tl!("Join the ArtCraft community on Discord").to_string(),
-                url: self.discord_url,
-            },
+            widgets::IconLink { name: "Website", label: tl!("Website").to_string(), tip: "uniphar.com.br".to_string(), url: WEBSITE_URL },
+            widgets::IconLink { name: "GitHub", label: tl!("GitHub").to_string(), tip: "github.com/uaidenys".to_string(), url: GITHUB_URL },
         ];
-        links.extend(SOCIAL.iter().map(|(name, url)| widgets::IconLink {
-            name,
-            label: (*name).to_string(),
-            tip: fmt(tl!("ArtCraft on {name}"), &[("name", name)]),
-            url,
-        }));
+        links.extend(SOCIAL.iter().map(|(name, url)| widgets::IconLink { name, label: (*name).to_string(), tip: format!("Uniphar · {name}"), url }));
         let icon = 13.0;
         let spacing = ui.spacing().item_spacing.x;
         // The icons on the right keep their size; the status on the left gets what is left and
         // is cut short with "…", never drawn under them.
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
             widgets::icon_links(ui, icon, &links);
+            ui.add_space(12.0);
+            ui.label(RichText::new(format!("SAC {SAC_PHONE}")).size(12.5).family(theme::semibold()).color(t.ink));
             ui.add_space(8.0);
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                 // While GitHub is rate limited, saying so matters more than when we last checked.
@@ -386,15 +380,15 @@ impl LauncherUi {
             return;
         }
         let width = ui.available_width();
-        // Neighbouring cards share their 1 px hairline, like the site's `gap-px` grid.
-        let cols = ((width / CARD_MIN_W).floor() as usize).max(1);
-        let card_w = (width + (cols as f32 - 1.0)) / cols as f32;
+        // Rounded cards apart from each other, CARD_GAP between them.
+        let cols = (((width + CARD_GAP) / (CARD_MIN_W + CARD_GAP)).floor() as usize).max(1);
+        let card_w = (width - CARD_GAP * (cols as f32 - 1.0)) / cols as f32;
         let rows = ids.len().div_ceil(cols);
-        let height = rows as f32 * (CARD_H - 1.0) + 1.0;
+        let height = rows as f32 * (CARD_H + CARD_GAP) - CARD_GAP;
         let (area, _) = ui.allocate_exact_size(vec2(width, height), Sense::hover());
         for (i, id) in ids.iter().enumerate() {
             let (row, col) = (i / cols, i % cols);
-            let min = area.min + vec2(col as f32 * (card_w - 1.0), row as f32 * (CARD_H - 1.0));
+            let min = area.min + vec2(col as f32 * (card_w + CARD_GAP), row as f32 * (CARD_H + CARD_GAP));
             self.card(ui, id, Rect::from_min_size(min, vec2(card_w, CARD_H)));
         }
     }
@@ -423,20 +417,19 @@ impl LauncherUi {
         }
         let painter = ui.painter_at(rect.expand(16.0));
         // A faint wash in the app's colour fades in under the pointer.
-        let fill = t.bg.lerp_to_gamma(app_color, 0.05 * lift);
-        painter.rect(rect, CornerRadius::ZERO, fill, t.hairline(), egui::StrokeKind::Inside);
-        // On hover, a 2 px rule in the app's colour wipes in from the left along the top, inside the
-        // hairlines the card shares with its neighbours (the site's rule sits within its grid gaps).
-        if lift > 0.0 {
-            let inside = rect.shrink(1.0);
-            painter.rect_filled(Rect::from_min_size(inside.min, vec2(inside.width() * lift, 2.0)), CornerRadius::ZERO, app_color);
-        }
+        let fill = crate::sidebar::surface(&t).lerp_to_gamma(app_color, 0.04 * lift);
+        const RADIUS: CornerRadius = CornerRadius::same(20);
+        painter.add(
+            egui::epaint::Shadow { offset: [0, 8], blur: 24, spread: 0, color: Color32::from_rgba_unmultiplied(0x39, 0x58, 0x86, 28 + (20.0 * lift) as u8) }
+                .as_shape(rect, RADIUS),
+        );
+        painter.rect(rect, RADIUS, fill, Stroke::new(1.0, tint(app_color, 0.25 * lift)), egui::StrokeKind::Inside);
 
         // The top strip: the version in the app's colour, and its GitHub page.
         let status = entry.status(self.platform, self.caps.manage_apps);
         let version = crate::card_parts::strip_version(&entry, &status);
         let strip = Rect::from_min_size(rect.min, vec2(rect.width(), STRIP_H));
-        painter.hline(strip.x_range(), strip.bottom() - 0.5, t.hairline());
+        painter.hline(strip.shrink2(vec2(CARD_PAD, 0.0)).x_range(), strip.bottom() - 0.5, t.hairline());
         {
             let mut strip_ui = ui.new_child(
                 egui::UiBuilder::new().max_rect(strip.shrink2(vec2(CARD_PAD, 0.0))).layout(egui::Layout::left_to_right(egui::Align::Center)),
@@ -1030,9 +1023,9 @@ mod tests {
         Release {
             tag: "v0.4.1".into(),
             version: None,
-            name: "ArtCraft Launcher v0.4.1".into(),
+            name: "Uni Launcher v0.4.1".into(),
             published_at: None,
-            html_url: "https://github.com/storytold/craft-launcher/releases/tag/v0.4.1".into(),
+            html_url: "https://github.com/uaidenys/craft-launcher/releases/tag/v0.4.1".into(),
             notes: String::new(),
             prerelease: false,
             assets: vec![

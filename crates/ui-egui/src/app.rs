@@ -114,7 +114,7 @@ pub struct LauncherUi {
     pub(crate) launcher_job: Option<artcraft_launcher_core::protocol::JobPhase>,
     /// The new launcher is in place: quit so it can start.
     restart_requested: bool,
-    /// News from ArtCraft's release feed, shown inline until dismissed.
+    /// News from Uni Launcher's release feed, shown inline until dismissed.
     pub(crate) announcements: Vec<artcraft_launcher_core::feed::Notice>,
     /// Alerts from the feed, shown as popups until acknowledged.
     pub(crate) alerts: Vec<artcraft_launcher_core::feed::Notice>,
@@ -489,7 +489,7 @@ impl LauncherUi {
         if self.settings.notify {
             let (title, body) = match fresh.as_slice() {
                 [(_, name, v)] => {
-                    let body: String = tl!("Open ArtCraft Launcher to update.").to_string();
+                    let body: String = tl!("Open Uni Launcher to update.").to_string();
                     (crate::i18n::fmt(tl!("{name} {v} is available"), &[("name", name), ("v", v)]), body)
                 }
                 many => {
@@ -600,6 +600,12 @@ impl LauncherUi {
             ctx.request_repaint_after(Duration::from_millis(50));
         }
 
+        // The white side menu runs the full height, left of the header, page and footer.
+        egui::Panel::left("sidebar")
+            .frame(egui::Frame::new().fill(crate::sidebar::surface(&tokens)).inner_margin(egui::Margin::symmetric(16, 0)))
+            .exact_size(crate::sidebar::SIDEBAR_W)
+            .resizable(false)
+            .show(ui, |ui| self.sidebar(ui));
         // The bars' separator lines are the hairlines under the header and over the footer.
         egui::Panel::top("header")
             .frame(egui::Frame::new().fill(tokens.bg))
@@ -720,7 +726,7 @@ impl LauncherUi {
         self.entry(id).is_some_and(|e| e.status(self.platform, self.caps.manage_apps).is_installed())
     }
 
-    /// "ArtCraft API", "GitHub" or "ArtCraft API and GitHub": the services behind the releases on
+    /// "Uniphar API", "GitHub" or "Uniphar API and GitHub": the services behind the releases on
     /// screen right now. `None` until something has loaded.
     pub(crate) fn sources_label(&self) -> Option<String> {
         use artcraft_launcher_core::protocol::Origin;

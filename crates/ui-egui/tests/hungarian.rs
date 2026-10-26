@@ -55,13 +55,13 @@ fn release(id: &str, v: &str, at: i64) -> Release {
         version: version::parse(v),
         name: format!("v{v}"),
         published_at: Some(at),
-        html_url: format!("https://github.com/storytold/{id}/releases/tag/v{v}"),
+        html_url: format!("https://github.com/uaidenys/{id}/releases/tag/v{v}"),
         notes: String::new(),
         prerelease: false,
         assets: vec![Asset {
             name: name.clone(),
             size: 150 << 20,
-            url: format!("https://github.com/storytold/{id}/releases/download/v{v}/{name}"),
+            url: format!("https://github.com/uaidenys/{id}/releases/download/v{v}/{name}"),
             sha256: None,
         }],
     }
@@ -72,8 +72,8 @@ fn events() -> Vec<Event> {
     for (i, app) in SUITE.iter().enumerate() {
         let latest = LatestRelease::Found(release(app.id, "0.5.0", NOW - 40 * 86_400 - i as i64 * 600));
         ev.push(Event::Latest { app: app.id.into(), latest, from: Origin::ArtCraftApi });
-        let installed = matches!(app.id, "photocraft" | "lightcraft").then(|| Installed {
-            version: version::parse(if app.id == "photocraft" { "0.4.1" } else { "0.5.0" }),
+        let installed = matches!(app.id, "unitexto" | "lightcraft").then(|| Installed {
+            version: version::parse(if app.id == "unitexto" { "0.4.1" } else { "0.5.0" }),
             source: InstallSource::MacApp,
             location: format!("/Applications/{}.app", app.name),
             package: None,
@@ -126,11 +126,11 @@ fn hungarian_ui_translates_labels_dates_and_messages() {
     snapshot(&mut h, "grid-hu-dark");
     // Product names stay in English.
     assert!(h.query_by_label("Launcher").is_none());
-    h.get_by_label("Craft App Suite");
+    h.get_by_label("Uniphar Indústria Farmacêutica");
     h.get_by_label("Képszerkesztés");
     h.get_by_label("Frissítés: 0.5.0");
     h.get_by_label_contains("Ellenőrzőösszeg ellenőrzése…");
-    h.get_by_label_contains("Ellenőrizve: 3 perce · ArtCraft API");
+    h.get_by_label_contains("Ellenőrizve: 3 perce · Uniphar API");
     h.get_by_label("LightCraft frissítve. Verzió: 0.5.0");
 
     let mut table = harness(ViewMode::Table);
@@ -152,7 +152,7 @@ fn check_settings_layout() {
         h.run_steps(8);
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, height));
         let done = h.get_by_label("Kész").rect();
-        let quit = h.get_by_label("Kilépés az ArtCraft Launcherből").rect();
+        let quit = h.get_by_label("Kilépés az UniTextoből").rect();
         assert!(screen.contains_rect(done), "{width}x{height}: Done is clipped: {done:?}");
         assert!(screen.contains_rect(quit), "{width}x{height}: Quit is clipped: {quit:?}");
         assert!(!done.intersects(quit));

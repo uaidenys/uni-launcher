@@ -74,7 +74,7 @@ impl CheckEvery {
         }
     }
 
-    /// How often to look. Checks ask ArtCraft's release feed (one cheap request; GitHub only as a
+    /// How often to look. Checks ask Uni Launcher's release feed (one cheap request; GitHub only as a
     /// fallback), so automatic checks run every five minutes.
     pub fn seconds(self) -> Option<i64> {
         match self {
