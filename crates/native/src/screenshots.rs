@@ -135,7 +135,15 @@ mod tests {
     #[test]
     fn saved_pictures_need_no_network_and_a_failure_ends_the_run() {
         let paths = Paths::under(tempfile::tempdir().unwrap().path());
-        let page = AppDetails::by_id("unitexto").unwrap();
+        // The Uni pages have no pictures yet: a page with four.
+        use artcraft_launcher_core::details::Shot;
+        const SHOTS: &[Shot] = &[
+            Shot { key: "a", caption: "" },
+            Shot { key: "b", caption: "" },
+            Shot { key: "c", caption: "" },
+            Shot { key: "d", caption: "" },
+        ];
+        let page = &AppDetails { shots: SHOTS, ..*AppDetails::by_id("unitexto").unwrap() };
         // The second picture is saved already; the first and the others need the network, which is not there.
         let second = paths.screenshot(page.id, page.shots[1].key);
         write_atomic(&second, &jpeg()).unwrap();

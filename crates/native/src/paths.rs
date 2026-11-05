@@ -88,11 +88,11 @@ pub fn write_atomic(path: &std::path::Path, bytes: &[u8]) -> Result<(), String> 
 }
 
 /// Portable mode: a `portable.txt` beside the executable keeps everything in
-/// `ArtCraftLauncherData` next to it (the Windows portable zip ships one).
+/// `UniLauncherData` next to it (the Windows portable zip ships one).
 pub fn portable_root() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
     let dir = exe.parent()?;
-    dir.join("portable.txt").is_file().then(|| dir.join("ArtCraftLauncherData"))
+    dir.join("portable.txt").is_file().then(|| dir.join("UniLauncherData"))
 }
 
 #[cfg(test)]

@@ -21,6 +21,7 @@ pub fn meta(app: &CraftApp) -> (&'static str, Option<&'static str>) {
     match app.id {
         "unitexto" => ("Office;WordProcessor;", None),
         "uniplanner" => ("Office;Spreadsheet;", None),
+        "unipdf" => ("Office;Viewer;", None),
         _ => ("Office;", None),
     }
 }

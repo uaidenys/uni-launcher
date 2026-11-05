@@ -57,12 +57,13 @@ fn release(id: &str, v: &str, at: i64) -> Release {
     }
 }
 
-fn events() -> Vec<Event> {
+/// The table shows the up-to-date app at rest; the grid shows it re-verifying a download.
+fn events(view: ViewMode) -> Vec<Event> {
     let mut ev = Vec::new();
     for (i, app) in SUITE.iter().enumerate() {
         let latest = LatestRelease::Found(release(app.id, "0.5.0", NOW - 40 * 86_400 - i as i64 * 600));
         ev.push(Event::Latest { app: app.id.into(), latest, from: Origin::ArtCraftApi });
-        let installed = matches!(app.id, "unitexto" | "lightcraft").then(|| Installed {
+        let installed = matches!(app.id, "unitexto" | "uniplanner").then(|| Installed {
             version: version::parse(if app.id == "unitexto" { "0.4.1" } else { "0.5.0" }),
             source: InstallSource::Msi,
             location: format!("C:\\Program Files\\{}\\{}.exe", app.name, app.id),
@@ -70,15 +71,17 @@ fn events() -> Vec<Event> {
         });
         ev.push(Event::Detected { app: app.id.into(), installed });
     }
-    ev.push(Event::Progress { app: "filmcraft".into(), phase: JobPhase::Verifying });
     ev.push(Event::CheckFinished { at: NOW - 180, source: Source::Feed, rate_limited_until: None });
-    ev.push(Event::JobFinished { app: "lightcraft".into(), result: Ok("LightCraft updated to 0.5.0".into()) });
+    ev.push(Event::JobFinished { app: "uniplanner".into(), result: Ok("UniPlanner updated to 0.5.0".into()) });
+    if matches!(view, ViewMode::Grid) {
+        ev.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Verifying });
+    }
     ev
 }
 
 fn harness(view: ViewMode) -> Harness<'static, Option<LauncherUi>> {
     artcraft_launcher_ui_egui::i18n::set_test_lang(artcraft_launcher_ui_egui::i18n::Lang::EN);
-    let mut backend = Some(Fake { events: events(), clock: Rc::new(Cell::new(NOW)) });
+    let mut backend = Some(Fake { events: events(view), clock: Rc::new(Cell::new(NOW)) });
     let settings =
         Settings { view, notify: false, language: "pt-BR".into(), theme: artcraft_launcher_ui_egui::theme::ThemeChoice::Dark, ..Settings::default() };
     Harness::builder().with_size(egui::vec2(1180.0, 900.0)).with_theme(egui::Theme::Dark).build_ui_state(
@@ -103,11 +106,11 @@ fn portuguese_ui_translates_labels_dates_and_messages() {
     h.run_steps(8);
     assert!(h.query_by_label("Launcher").is_none());
     h.get_by_label("Uniphar Indústria Farmacêutica");
-    h.get_by_label("Edição de imagens");
+    h.get_by_label("Escrita e design de documentos");
     h.get_by_label("Atualizar para 0.5.0");
     h.get_by_label_contains("Conferindo a soma de verificação…");
     h.get_by_label_contains("Verificado há 3 min · via Uniphar API");
-    h.get_by_label("LightCraft atualizado para 0.5.0");
+    h.get_by_label("UniPlanner atualizado para 0.5.0");
 
     let mut table = harness(ViewMode::Table);
     table.run_steps(8);

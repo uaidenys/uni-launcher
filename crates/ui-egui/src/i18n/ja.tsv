@@ -118,7 +118,7 @@
 	{month} {day}, {year}	{year}年{month}{day}日
 
 	Automatically	自動
-	Every Craft app	すべての Craft アプリ
+	Every Uni app	すべての Uni アプリ
 	Apps on this computer	このコンピューターのアプリ
 	Installed apps with a newer version	新しいバージョンがあるインストール済みアプリ
 	Apps you can install	インストールできるアプリ
@@ -168,6 +168,7 @@ vectorcraft	Vector illustration	ベクターイラスト
 filmcraft	Video editing, color and sound	動画編集、カラー、サウンド
 lightcraft	Photo library and raw development	フォトライブラリと RAW 現像
 pdfcraft	Reading, organizing and protecting PDFs	PDF の閲覧、整理、保護
+unipdf	Reading, organizing and protecting PDFs	PDF の閲覧、整理、保護
 effectcraft	Motion graphics and visual effects	モーショングラフィックスと視覚効果
 designcraft	Page layout and publishing	ページレイアウトと出版
 wordcraft	Writing and document design	文書作成とデザイン
@@ -241,7 +242,6 @@ month	Dec	12月
 	Couldn't check for updates: {f}	更新を確認できませんでした: {f}
 	Website (coming soon)	ウェブサイト（近日公開）
 	GitHub repository	GitHub リポジトリ
-	Uni Launcher	Uni Launcher
 	Update 1 app	1 個のアプリを更新
 	Update all ({count})	すべて更新（{count}）
 	⊞  Grid	⊞  グリッド
@@ -352,9 +352,8 @@ filter	Installed	インストール済み
 # Tray (menu bar) menu and tooltip
 	Show Uni Launcher	Uni Launcher を表示
 	Check for Updates	更新を確認
-	Visit getartcraft.com	getartcraft.com を開く
+	Visit uniphar.com.br	uniphar.com.br を開く
 	Uni Launcher on GitHub	GitHub の Uni Launcher
-	Join the Uni Launcher Discord	Uni Launcher Discord に参加
 @plural	Uni Launcher · {n} update available|Uni Launcher · {n} updates available	Uni Launcher · {n} 件の更新があります
 	Install folder	インストール先フォルダー
 	Default install folder	既定のインストール先フォルダー

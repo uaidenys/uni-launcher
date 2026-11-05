@@ -1,7 +1,7 @@
 //! Finding Craft Apps that are already installed, however they got there.
 //!
 //! - macOS: `<App>.app` in `/Applications` or `~/Applications`, read from its `Info.plist`.
-//! - Windows: the Windows Installer's uninstall entries (`Learning Machines LLC`), and portable
+//! - Windows: the Windows Installer's uninstall entries (`Denys Rodrigues de Oliveira`), and portable
 //!   copies the launcher unpacked.
 //! - Linux: AppImages in `~/Applications` (where the launcher and AppImageLauncher put them),
 //!   `~/AppImages` (Gear Lever) and `~/.local/bin`, Debian/RPM packages, Flatpaks, and tarball
@@ -449,6 +449,17 @@ pub mod freebsd {
     }
 }
 
+/// An app that shipped under another name before: no Uni app has one yet, but the launcher still
+/// has to find the old installs when one is renamed.
+#[cfg(test)]
+const RENAMED: CraftApp = CraftApp {
+    id: "unipdf",
+    name: "UniPDF",
+    former_ids: &["pdfcraft"],
+    former_names: &["PdfCraft"],
+    ..artcraft_launcher_core::SUITE[0]
+};
+
 #[cfg(all(test, target_os = "linux"))]
 mod linux_tests {
     use super::*;
@@ -497,10 +508,10 @@ mod linux_tests {
             std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
             bin
         };
-        let sound = write("soundcraft", "#!/bin/sh\necho 'SoundCraft 0.5.0'\n");
-        assert_eq!(linux::binary_version(&sound, CraftApp::by_id("soundcraft").unwrap()).unwrap().to_string(), "0.5.0");
-        let pdf = write("pdfcraft", "#!/bin/sh\necho 'printcraft 0.2.1'\n");
-        assert_eq!(linux::binary_version(&pdf, CraftApp::by_id("pdfcraft").unwrap()).unwrap().to_string(), "0.2.1");
+        let planner = write("uniplanner", "#!/bin/sh\necho 'UniPlanner 0.5.0'\n");
+        assert_eq!(linux::binary_version(&planner, CraftApp::by_id("uniplanner").unwrap()).unwrap().to_string(), "0.5.0");
+        let pdf = write("unipdf", "#!/bin/sh\necho 'pdfcraft 0.2.1'\n");
+        assert_eq!(linux::binary_version(&pdf, &super::RENAMED).unwrap().to_string(), "0.2.1");
     }
 }
 
@@ -537,13 +548,13 @@ mod tests {
 
     #[test]
     fn parse_cli_version_accepts_id_display_name_and_former_id() {
-        let photo = CraftApp::by_id("unitexto").unwrap();
-        let sound = CraftApp::by_id("soundcraft").unwrap();
-        let pdf = CraftApp::by_id("pdfcraft").unwrap();
-        assert_eq!(parse_cli_version("unitexto 0.7.0 (dev build)", photo).unwrap().to_string(), "0.7.0");
-        assert_eq!(parse_cli_version("SoundCraft 0.5.0", sound).unwrap().to_string(), "0.5.0");
-        assert_eq!(parse_cli_version("printcraft 0.2.1", pdf).unwrap().to_string(), "0.2.1");
-        assert_eq!(parse_cli_version("PdfCraft 0.6.0", pdf).unwrap().to_string(), "0.6.0");
+        let texto = CraftApp::by_id("unitexto").unwrap();
+        let planner = CraftApp::by_id("uniplanner").unwrap();
+        let pdf = &RENAMED;
+        assert_eq!(parse_cli_version("unitexto 0.7.0 (dev build)", texto).unwrap().to_string(), "0.7.0");
+        assert_eq!(parse_cli_version("UniPlanner 0.5.0", planner).unwrap().to_string(), "0.5.0");
+        assert_eq!(parse_cli_version("pdfcraft 0.2.1", pdf).unwrap().to_string(), "0.2.1");
+        assert_eq!(parse_cli_version("UniPDF 0.6.0", pdf).unwrap().to_string(), "0.6.0");
         assert!(strip_cli_prefix("unitexto-cli 1.0.0", "unitexto").is_none());
     }
 
@@ -573,44 +584,39 @@ mod tests {
         );
     }
 
-    const LEARNING_MACHINES: &str = "Learning Machines LLC";
-
     fn roots() -> Vec<PathBuf> {
         vec![PathBuf::from(r"C:\Program Files"), PathBuf::from(r"C:\Program Files (x86)")]
     }
 
     #[test]
-    fn pdfcraft_matches_its_former_printcraft_installer_name() {
-        let pdf = CraftApp::by_id("pdfcraft").unwrap();
-        assert!(is_installer_entry(pdf, "PrintCraft", LEARNING_MACHINES), "a PrintCraft entry from {LEARNING_MACHINES} should be PdfCraft's");
+    fn a_renamed_app_matches_its_former_installer_name() {
+        assert!(is_installer_entry(&RENAMED, "PdfCraft", PUBLISHER), "a PdfCraft entry from {PUBLISHER} should be UniPDF's");
     }
 
     #[test]
-    fn pdfcraft_still_matches_its_own_installer_name() {
-        let pdf = CraftApp::by_id("pdfcraft").unwrap();
-        assert!(is_installer_entry(pdf, "PdfCraft", LEARNING_MACHINES));
+    fn a_renamed_app_still_matches_its_own_installer_name() {
+        assert!(is_installer_entry(&RENAMED, "UniPDF", PUBLISHER));
     }
 
     #[test]
-    fn printcraft_entries_match_nothing_else() {
-        let pdf = CraftApp::by_id("pdfcraft").unwrap();
-        assert!(!is_installer_entry(pdf, "PrintCraft", "Some Other Publisher"));
-        assert!(!is_installer_entry(pdf, "UniTexto", LEARNING_MACHINES));
-        for a in SUITE.iter().filter(|a| a.id != "pdfcraft") {
-            assert!(!is_installer_entry(a, "PrintCraft", LEARNING_MACHINES), "PrintCraft matched {}", a.name);
+    fn former_name_entries_match_nothing_else() {
+        assert!(!is_installer_entry(&RENAMED, "PdfCraft", "Some Other Publisher"));
+        assert!(!is_installer_entry(&RENAMED, "UniTexto", PUBLISHER));
+        for a in &SUITE {
+            assert!(!is_installer_entry(a, "PdfCraft", PUBLISHER), "PdfCraft matched {}", a.name);
         }
     }
 
     #[test]
-    fn pdfcraft_exe_is_sought_under_every_name_it_has_shipped_as() {
-        let pdf = CraftApp::by_id("pdfcraft").unwrap();
-        let location = PathBuf::from(r"D:\Apps\PrintCraft");
+    fn a_renamed_apps_exe_is_sought_under_every_name_it_has_shipped_as() {
+        let pdf = &RENAMED;
+        let location = PathBuf::from(r"D:\Apps\PdfCraft");
         let roots = roots();
-        let mut want = vec![location.join("pdfcraft.exe"), location.join("printcraft.exe")];
+        let mut want = vec![location.join("unipdf.exe"), location.join("pdfcraft.exe")];
         for root in &roots {
-            for dir in ["PdfCraft", "PrintCraft"] {
+            for dir in ["UniPDF", "PdfCraft"] {
+                want.push(root.join(dir).join("unipdf.exe"));
                 want.push(root.join(dir).join("pdfcraft.exe"));
-                want.push(root.join(dir).join("printcraft.exe"));
             }
         }
         assert_eq!(exe_candidates(pdf, Some(&location), &roots), want);
@@ -621,9 +627,9 @@ mod tests {
         let roots = roots();
         let location = PathBuf::from(r"D:\Apps\Somewhere");
         for a in SUITE.iter().filter(|a| a.former_ids.is_empty() && a.former_names.is_empty()) {
-            assert!(is_installer_entry(a, a.name, LEARNING_MACHINES), "{}", a.name);
+            assert!(is_installer_entry(a, a.name, PUBLISHER), "{}", a.name);
             assert!(!is_installer_entry(a, a.name, "Some Other Publisher"), "{}", a.name);
-            assert!(!is_installer_entry(a, &a.name.to_lowercase(), LEARNING_MACHINES), "{}", a.name);
+            assert!(!is_installer_entry(a, &a.name.to_lowercase(), PUBLISHER), "{}", a.name);
             let exe = format!("{}.exe", a.id);
             let in_program_files: Vec<PathBuf> = roots.iter().map(|r| r.join(a.name).join(&exe)).collect();
             assert_eq!(exe_candidates(a, None, &roots), in_program_files);

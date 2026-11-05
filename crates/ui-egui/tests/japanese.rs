@@ -6,7 +6,7 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use artcraft_launcher_core::protocol::{Backend, Capabilities, Command, Event, JobPhase, LatestRelease, Origin, PausedDownload, Source};
+use artcraft_launcher_core::protocol::{Backend, Capabilities, Command, Event, JobPhase, LatestRelease, Origin, Source};
 use artcraft_launcher_core::release::{Asset, Release};
 use artcraft_launcher_core::status::InstallSource;
 use artcraft_launcher_core::{Arch, Installed, Os, Platform, SUITE, version};
@@ -64,22 +64,10 @@ fn release(id: &str, v: &str, at: i64) -> Release {
     }
 }
 
-/// A realistic mix: updates, up-to-date apps, a download in progress, one app with no release.
+/// A realistic mix: an update and a download in progress.
 fn events() -> Vec<Event> {
     let mut ev = Vec::new();
-    let versions = [
-        ("unitexto", "0.5.0"),
-        ("vectorcraft", "0.7.0"),
-        ("filmcraft", "0.4.0"),
-        ("lightcraft", "0.4.0"),
-        ("pdfcraft", "0.4.0"),
-        ("effectcraft", "0.6.0"),
-        ("designcraft", "0.4.0"),
-        ("uniplanner", "0.3.0"),
-        ("deckcraft", "0.3.0"),
-        ("gridcraft", "0.3.0"),
-        ("cadcraft", "0.3.0"),
-    ];
+    let versions = [("unitexto", "0.5.0"), ("uniplanner", "0.3.0")];
     for (i, (id, v)) in versions.iter().enumerate() {
         ev.push(Event::Latest {
             app: (*id).into(),
@@ -87,8 +75,7 @@ fn events() -> Vec<Event> {
             from: Origin::ArtCraftApi,
         });
     }
-    ev.push(Event::Latest { app: "soundcraft".into(), latest: LatestRelease::None, from: Origin::ArtCraftApi });
-    let installed = [("unitexto", "0.4.1"), ("lightcraft", "0.4.0"), ("uniplanner", "0.3.0"), ("effectcraft", "0.5.0")];
+    let installed = [("unitexto", "0.4.1"), ("uniplanner", "0.3.0")];
     for app in &SUITE {
         let inst = installed.iter().find(|(id, _)| *id == app.id).map(|(_, v)| Installed {
             version: version::parse(v),
@@ -98,9 +85,7 @@ fn events() -> Vec<Event> {
         });
         ev.push(Event::Detected { app: app.id.into(), installed: inst });
     }
-    ev.push(Event::Progress { app: "filmcraft".into(), phase: JobPhase::Downloading { done: 48 << 20, total: 131 << 20 } });
-    ev.push(Event::Paused { app: "deckcraft".into(), download: Some(PausedDownload { done: 30 << 20, total: 120 << 20 }) });
-    ev.push(Event::Progress { app: "gridcraft".into(), phase: JobPhase::Reconnecting { done: 10 << 20, total: 90 << 20 } });
+    ev.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Downloading { done: 48 << 20, total: 131 << 20 } });
     ev.push(Event::CheckFinished { at: NOW - 180, source: Source::GitHubApi, rate_limited_until: None });
     ev
 }
@@ -180,16 +165,16 @@ fn japanese_switches_persists_and_keeps_install_actions() {
     assert_eq!(restored.language, "ja");
     h.get_by_label("完了").click();
     h.run_steps(3);
-    h.get_by_label("画像編集");
+    h.get_by_label("文書作成とデザイン");
     h.get_by_label_contains("最終確認: 3 分前 · 取得元: Uniphar API");
     h.get_by_label("0.5.0 に更新");
     // Product names stay in English.
     assert!(h.query_by_label("Launcher").is_none());
     snapshot(&mut h, "grid-ja-dark");
-    h.get_by_label("すべて更新（2）").click();
+    h.get_by_label("1 個のアプリを更新").click();
     h.run_steps(2);
     let installs: Vec<_> = sent.borrow().iter().filter_map(|c| if let Command::Install { app } = c { Some(app.clone()) } else { None }).collect();
-    assert_eq!(installs, ["unitexto", "effectcraft"]);
+    assert_eq!(installs, ["unitexto"]);
 
     let (mut table, _) = harness_language(ViewMode::Table, egui::Theme::Light, true, &restored.language);
     table.run_steps(6);
@@ -198,5 +183,5 @@ fn japanese_switches_persists_and_keeps_install_actions() {
     snapshot(&mut table, "table-ja-light");
     let (mut web, _) = harness_language(ViewMode::Grid, egui::Theme::Dark, false, &restored.language);
     web.run_steps(6);
-    assert!(web.query_all_by_label("macOS 版をダウンロード").count() >= 3);
+    assert!(web.query_all_by_label("macOS 版をダウンロード").count() >= 1);
 }

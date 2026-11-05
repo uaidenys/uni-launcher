@@ -116,7 +116,7 @@
 	{month} {day}, {year}	{year}. {month} {day}.
 
 	Automatically	Automatikusan
-	Every Craft app	Minden Craft-alkalmazás
+	Every Uni app	Minden Uni-alkalmazás
 	Apps on this computer	Alkalmazások ezen a számítógépen
 	Installed apps with a newer version	Telepített alkalmazások, amelyekhez frissítés érhető el
 	Apps you can install	Telepíthető alkalmazások
@@ -166,6 +166,7 @@ vectorcraft	Vector illustration	Vektoros illusztráció
 filmcraft	Video editing, color and sound	Videószerkesztés, színkorrekció és hang
 lightcraft	Photo library and raw development	Fotók rendszerezése és RAW-előhívás
 pdfcraft	Reading, organizing and protecting PDFs	PDF-ek olvasása, rendezése és védelme
+unipdf	Reading, organizing and protecting PDFs	PDF-ek olvasása, rendezése és védelme
 effectcraft	Motion graphics and visual effects	Mozgógrafika és vizuális effektek
 designcraft	Page layout and publishing	Oldaltervezés és kiadványszerkesztés
 wordcraft	Writing and document design	Írás és dokumentumtervezés
@@ -239,7 +240,6 @@ month	Dec	dec.
 	Couldn't check for updates: {f}	Nem sikerült frissítéseket keresni: {f}
 	Website (coming soon)	Webhely (hamarosan)
 	GitHub repository	GitHub-tároló
-	Uni Launcher	Uni Launcher
 	Update 1 app	1 alkalmazás frissítése
 	Update all ({count})	Összes frissítése ({count})
 	⊞  Grid	⊞  Rács
@@ -350,9 +350,8 @@ filter	Installed	Telepítve
 # Tray (menu bar) menu and tooltip
 	Show Uni Launcher	Uni Launcher megjelenítése
 	Check for Updates	Frissítések keresése
-	Visit getartcraft.com	getartcraft.com megnyitása
+	Visit uniphar.com.br	uniphar.com.br megnyitása
 	Uni Launcher on GitHub	Uni Launcher a GitHubon
-	Join the Uni Launcher Discord	Csatlakozás az Uni Launcher Discord-közösségéhez
 @plural	Uni Launcher · {n} update available|Uni Launcher · {n} updates available	Uni Launcher · {n} frissítés elérhető|Uni Launcher · {n} frissítés elérhető
 	Install folder	Telepítési mappa
 	Default install folder	Alapértelmezett telepítési mappa

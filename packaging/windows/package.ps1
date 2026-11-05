@@ -179,7 +179,7 @@ foreach ($f in 'README.md', 'LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE', 'ATTRIBUT
   if (Test-Path $p) { Copy-Item $p $Portable }
 }
 # portable.txt beside artcraft-launcher.exe switches on portable mode: settings and the download
-# cache go to ArtCraftLauncherData\ next to the exe instead of %APPDATA%.
+# cache go to UniLauncherData\ next to the exe instead of %APPDATA%.
 Copy-Item (Join-Path $PSScriptRoot 'portable.txt') $Portable
 $Zip = Join-Path $Dist "$Pkg-$Version-windows-$Arch-portable.zip"
 Remove-Item -Force $Zip -ErrorAction SilentlyContinue

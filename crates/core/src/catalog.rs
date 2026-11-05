@@ -72,10 +72,21 @@ const fn app(
     CraftApp { id, name, tagline, color, ink_light, ink_dark, repo, former_ids: &[], former_names: &[] }
 }
 
-/// The Uniphar Indústria Farmacêutica, in display order matching getartcraft.com:
-pub const SUITE: [CraftApp; 2] = [
-    app("unitexto", "UniTexto", "Writing and document design", [[0x39, 0x58, 0x86], [0x39, 0x58, 0x86], [0xb1, 0xc9, 0xef]], "uaidenys/unitexto"),
+/// The Uni apps from Uniphar Indústria Farmacêutica, in display order:
+pub const SUITE: [CraftApp; 3] = [
+    // Built from WordCraft, whose names its files keep: `wordcraft-<version>-…` releases, and
+    // `wordcraft.exe` in `Program Files\UniTexto`.
+    CraftApp {
+        former_ids: &["wordcraft"],
+        ..app("unitexto", "UniTexto", "Writing and document design", [[0x39, 0x58, 0x86], [0x39, 0x58, 0x86], [0xb1, 0xc9, 0xef]], "uaidenys/unitexto")
+    },
     app("uniplanner", "UniPlanner", "Spreadsheets and data", [[0x37, 0x55, 0x34], [0x37, 0x55, 0x34], [0xae, 0xc3, 0xb0]], "uaidenys/uniplanner"),
+    // Built from PdfCraft, whose names its files keep: `pdfcraft-<version>-…` releases, and
+    // `pdfcraft.exe` in `Program Files\UniPDF`.
+    CraftApp {
+        former_ids: &["pdfcraft"],
+        ..app("unipdf", "UniPDF", "Reading, organizing and protecting PDFs", [[0x62, 0x8e, 0xcb], [0x39, 0x58, 0x86], [0xb1, 0xc9, 0xef]], "uaidenys/unipdf")
+    },
 ];
 
 /// Uni Launcher's website.
@@ -85,7 +96,7 @@ pub const WEBSITE_URL: &str = "https://uniphar.com.br/";
 pub const GITHUB_OWNER: &str = "uaidenys";
 /// Uni Launcher on GitHub: every Craft App's source.
 pub const GITHUB_URL: &str = "https://github.com/uaidenys";
-/// Uni Launcher's social accounts: (service, URL). Shown as small icons, less prominent than Discord.
+/// Uni Launcher's social accounts: (service, URL). Shown as small icons.
 pub const SOCIAL: [(&str, &str); 3] = [
     ("Instagram", "https://www.instagram.com/uniphar.ind/"),
     ("Facebook", "https://www.facebook.com/profile.php?id=61577659983789"),
@@ -94,11 +105,6 @@ pub const SOCIAL: [(&str, &str); 3] = [
 
 /// Uniphar customer service (SAC) phone.
 pub const SAC_PHONE: &str = "(62) 3316-3131";
-
-/// The Uni Launcher community on Discord.
-pub const DISCORD_URL: &str = "https://discord.gg/artcraft";
-/// Deep link into the Discord application for the Uni Launcher server invite.
-pub const DISCORD_APP_URL: &str = "discord://-/invite/artcraft";
 
 /// Uni Launcher itself, described like a Craft App so it can update itself with the same
 /// machinery (asset names `artcraft-launcher-<ver>-…`, bundle id `ai.storyteller.artcraft-launcher`,
@@ -123,7 +129,7 @@ mod tests {
     #[test]
     fn suite_has_the_uni_apps_with_unique_ids() {
         let ids: Vec<_> = SUITE.iter().map(|a| a.id).collect();
-        assert_eq!(ids, ["unitexto", "uniplanner"]);
+        assert_eq!(ids, ["unitexto", "uniplanner", "unipdf"]);
         for a in &SUITE {
             assert_eq!(a.repo, format!("{GITHUB_OWNER}/{}", a.id));
             assert_eq!(a.name.to_lowercase(), a.id);
@@ -133,10 +139,18 @@ mod tests {
     #[test]
     fn apps_are_found_by_id_and_link_to_uniphar() {
         let texto = CraftApp::by_id("unitexto").unwrap();
-        assert_eq!(texto.stems().collect::<Vec<_>>(), ["unitexto"]);
+        assert_eq!(texto.stems().collect::<Vec<_>>(), ["unitexto", "wordcraft"]);
         assert_eq!(texto.names().collect::<Vec<_>>(), ["UniTexto"]);
         assert_eq!(texto.website(), "https://uniphar.com.br/");
         assert_eq!(texto.repo_url(), "https://github.com/uaidenys/unitexto");
         assert!(CraftApp::by_id("wordcraft").is_none());
+    }
+
+    #[test]
+    fn unipdf_also_answers_to_pdfcraft() {
+        let pdf = CraftApp::by_id("unipdf").unwrap();
+        assert_eq!(pdf.stems().collect::<Vec<_>>(), ["unipdf", "pdfcraft"]);
+        assert_eq!(pdf.names().collect::<Vec<_>>(), ["UniPDF"]);
+        assert_eq!(pdf.repo, "uaidenys/unipdf");
     }
 }

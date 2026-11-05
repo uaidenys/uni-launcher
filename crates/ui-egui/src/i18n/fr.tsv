@@ -114,7 +114,7 @@
 	{month} {day}, {year}	{day} {month} {year}
 
 	Automatically	Automatiquement
-	Every Craft app	Toutes les applications Craft
+	Every Uni app	Toutes les applications Uni
 	Apps on this computer	Applications sur cet ordinateur
 	Installed apps with a newer version	Applications installées avec une version plus récente
 	Apps you can install	Applications que vous pouvez installer
@@ -164,6 +164,7 @@ vectorcraft	Vector illustration	Illustration vectorielle
 filmcraft	Video editing, color and sound	Montage vidéo, étalonnage et son
 lightcraft	Photo library and raw development	Photothèque et développement RAW
 pdfcraft	Reading, organizing and protecting PDFs	Lecture, organisation et protection de PDF
+unipdf	Reading, organizing and protecting PDFs	Lecture, organisation et protection de PDF
 effectcraft	Motion graphics and visual effects	Motion design et effets visuels
 designcraft	Page layout and publishing	Mise en page et édition
 wordcraft	Writing and document design	Rédaction et mise en forme de documents
@@ -236,7 +237,6 @@ month	Dec	déc.
 	Downloads the new version, replaces this one and opens it again	Télécharge la nouvelle version, remplace celle-ci et la rouvre
 	Couldn't check for updates: {f}	Impossible de rechercher les mises à jour : {f}
 	GitHub repository	Dépôt GitHub
-	Uni Launcher	Uni Launcher
 	Update 1 app	Mettre à jour 1 application
 	Update all ({count})	Tout mettre à jour ({count})
 	⊞  Grid	⊞  Grille
@@ -334,9 +334,8 @@ filter	Installed	Installées
 # Tray (menu bar) menu and tooltip
 	Show Uni Launcher	Afficher Uni Launcher
 	Check for Updates	Rechercher des mises à jour
-	Visit getartcraft.com	Visiter getartcraft.com
+	Visit uniphar.com.br	Visiter uniphar.com.br
 	Uni Launcher on GitHub	Uni Launcher sur GitHub
-	Join the Uni Launcher Discord	Rejoindre le Discord d'Uni Launcher
 	App details	Détails de l'application
 	Close (Esc)	Fermer (Esc)
 	Features	Fonctionnalités

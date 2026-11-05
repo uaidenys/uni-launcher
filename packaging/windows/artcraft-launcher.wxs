@@ -34,7 +34,7 @@
       Scope="perUser"
       Compressed="yes"
       Language="1033">
-    <SummaryInformation Description="Uni Launcher: install and update the Uniphar Indústria Farmacêutica" Manufacturer="Denys Rodrigues de Oliveira" />
+    <SummaryInformation Description="Uni Launcher: install and update the Uni apps from Uniphar Indústria Farmacêutica" Manufacturer="Denys Rodrigues de Oliveira" />
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
     <MajorUpgrade AllowSameVersionUpgrades="yes"
@@ -139,7 +139,7 @@
 
   <Fragment>
     <ComponentGroup Id="ArtCraftLauncherFiles">
-      <Component Id="ArtCraftLauncherApp" Directory="INSTALLFOLDER" Guid="55DCC431-EBEF-4C11-BABB-6D78CE0ECF4E">
+      <Component Id="ArtCraftLauncherApp" Directory="INSTALLFOLDER" Guid="14AE9A92-A71C-479F-89EB-415D61B72621">
         <File Id="ArtCraftLauncherExe" Source="$(var.BinDir)\artcraft-launcher.exe" KeyPath="no" />
         <!-- Read back by the next version's installer and by the launcher (self_update.rs). -->
         <RegistryValue Root="HKCU" Key="Software\Denys Rodrigues de Oliveira\Uni Launcher" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
@@ -150,7 +150,7 @@
         <RemoveFolder Id="RemoveLocalProgramsFolder" Directory="LocalProgramsFolder" On="uninstall" />
       </Component>
 
-      <Component Id="ArtCraftLauncherShortcut" Directory="ProgramMenuFolder" Guid="870F3DFA-BC0F-497F-85D5-A361B04826AF">
+      <Component Id="ArtCraftLauncherShortcut" Directory="ProgramMenuFolder" Guid="AF85FF1E-D26C-40B7-A485-9B3AF9549CDF">
         <Shortcut Id="StartMenuShortcut" Name="Uni Launcher"
             Description="Install and update the Uniphar Indústria Farmacêutica"
             Target="[#ArtCraftLauncherExe]" WorkingDirectory="INSTALLFOLDER"
@@ -161,7 +161,7 @@
       </Component>
 
       <!-- Only when the folder page's box is ticked; removed on uninstall like everything else. -->
-      <Component Id="ArtCraftLauncherDesktopShortcut" Directory="DesktopFolder" Guid="CF06DCF3-BE5A-4A2B-B3BF-F553CC6E5D60"
+      <Component Id="ArtCraftLauncherDesktopShortcut" Directory="DesktopFolder" Guid="56E14EC3-0BD2-4DAA-8478-7764CAA3EA98"
           Condition="INSTALLDESKTOPSHORTCUT = &quot;1&quot;">
         <Shortcut Id="DesktopShortcut" Name="Uni Launcher"
             Description="Install and update the Uniphar Indústria Farmacêutica"

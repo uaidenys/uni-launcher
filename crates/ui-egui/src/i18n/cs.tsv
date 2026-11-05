@@ -102,7 +102,7 @@
 	yesterday	včera
 	{month} {day}, {year}	{day}. {month} {year}
 	Automatically	Automaticky
-	Every Craft app	Všechny aplikace Craft
+	Every Uni app	Všechny aplikace Uni
 	Apps on this computer	Aplikace v tomto počítači
 	Installed apps with a newer version	Nainstalované aplikace s novější verzí
 	Apps you can install	Aplikace, které lze nainstalovat
@@ -148,6 +148,7 @@ vectorcraft	Vector illustration	Vektorová ilustrace
 filmcraft	Video editing, color and sound	Střih videa, barvy a zvuk
 lightcraft	Photo library and raw development	Katalog fotografií a vyvolávání RAW
 pdfcraft	Reading, organizing and protecting PDFs	Čtení, organizace a ochrana souborů PDF
+unipdf	Reading, organizing and protecting PDFs	Čtení, organizace a ochrana souborů PDF
 effectcraft	Motion graphics and visual effects	Pohyblivá grafika a vizuální efekty
 designcraft	Page layout and publishing	Sazba stránek a publikování
 wordcraft	Writing and document design	Psaní a návrh dokumentů
@@ -219,7 +220,6 @@ month	Dec	12.
 	Couldn't check for updates: {f}	Aktualizace nelze zkontrolovat: {f}
 	Website (coming soon)	Web (již brzy)
 	GitHub repository	Repozitář na GitHubu
-	Uni Launcher	Uni Launcher
 	Update 1 app	Aktualizovat 1 aplikaci
 	Update all ({count})	Aktualizovat vše ({count})
 	⊞  Grid	⊞  Mřížka
@@ -317,9 +317,8 @@ filter	Installed	Nainstalováno
 @id	appearance.theme	Vzhled
 	Show Uni Launcher	Zobrazit Uni Launcher
 	Check for Updates	Zkontrolovat aktualizace
-	Visit getartcraft.com	Navštívit getartcraft.com
+	Visit uniphar.com.br	Navštívit uniphar.com.br
 	Uni Launcher on GitHub	Uni Launcher na GitHubu
-	Join the Uni Launcher Discord	Připojit se na Uni Launcher Discord
 @plural	Uni Launcher · {n} update available|Uni Launcher · {n} updates available	Uni Launcher · {n} dostupná aktualizace|Uni Launcher · {n} dostupné aktualizace|Uni Launcher · {n} dostupných aktualizací
 	Install folder	Instalační složka
 	Default install folder	Výchozí instalační složka

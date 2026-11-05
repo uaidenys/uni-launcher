@@ -56,15 +56,13 @@ impl Tray {
         let show = MenuItem::new(i18n::t("Show Uni Launcher"), true, None);
         let check = MenuItem::new(i18n::t("Check for Updates"), true, None);
         use artcraft_launcher_core::catalog::{GITHUB_URL, WEBSITE_URL};
-        let website = MenuItem::new(i18n::t("Visit getartcraft.com"), true, None);
+        let website = MenuItem::new(i18n::t("Visit uniphar.com.br"), true, None);
         let github = MenuItem::new(i18n::t("Uni Launcher on GitHub"), true, None);
-        let discord = MenuItem::new(i18n::t("Join the Uni Launcher Discord"), true, None);
         let quit = MenuItem::new(i18n::t("Quit Uni Launcher"), true, None);
         let menu = Menu::new();
-        menu.append_items(&[&show, &check, &PredefinedMenuItem::separator(), &website, &github, &discord, &PredefinedMenuItem::separator(), &quit])
+        menu.append_items(&[&show, &check, &PredefinedMenuItem::separator(), &website, &github, &PredefinedMenuItem::separator(), &quit])
             .map_err(|e| e.to_string())?;
         let links = [(website.id().clone(), WEBSITE_URL), (github.id().clone(), GITHUB_URL)];
-        let discord_id = discord.id().clone();
         let icon = identity(TrayIconBuilder::new())
             .with_menu(Box::new(menu))
             .with_icon(load_icon()?)
@@ -78,7 +76,7 @@ impl Tray {
         {
             let tx = tx.clone();
             let wake = wake.clone();
-            let ids = (show_id.clone(), check_id.clone(), quit_id.clone(), discord_id);
+            let ids = (show_id.clone(), check_id.clone(), quit_id.clone());
             MenuEvent::set_event_handler(Some(move |e: MenuEvent| {
                 let action = if e.id == ids.0 {
                     TrayAction::Show
@@ -86,8 +84,6 @@ impl Tray {
                     TrayAction::Check
                 } else if e.id == ids.2 {
                     TrayAction::Quit
-                } else if e.id == ids.3 {
-                    TrayAction::Open(artcraft_launcher_native::process::discord_url())
                 } else if let Some((_, url)) = links.iter().find(|(id, _)| *id == e.id) {
                     TrayAction::Open(url)
                 } else {
@@ -109,9 +105,8 @@ impl Tray {
         let labels = vec![
             (show, "Show Uni Launcher"),
             (check, "Check for Updates"),
-            (website, "Visit getartcraft.com"),
+            (website, "Visit uniphar.com.br"),
             (github, "Uni Launcher on GitHub"),
-            (discord, "Join the Uni Launcher Discord"),
             (quit, "Quit Uni Launcher"),
         ];
         Ok(Self { icon, show: show_id, check: check_id, quit: quit_id, rx, tooltip: String::new(), language: String::new(), labels })

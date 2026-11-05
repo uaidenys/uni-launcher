@@ -2207,8 +2207,8 @@ mod tests {
     #[test]
     fn aur_packages_are_not_updated_as_arch_pkg() {
         let pacman = |name: &str| Installed { version: None, source: InstallSource::Pacman, location: String::new(), package: Some(name.into()) };
-        let app = artcraft_launcher_core::CraftApp::by_id("filmcraft").unwrap();
-        let installed = pacman("filmcraft-bin");
+        let app = artcraft_launcher_core::CraftApp::by_id("unitexto").unwrap();
+        let installed = pacman("unitexto-bin");
         assert!(managed_elsewhere_with(app, &installed, false, |_| None).is_some());
         assert_eq!(choose_kinds_with(app, Some(&installed), None, &[], &[], false), Vec::<PackageKind>::new());
         assert_eq!(choose_kinds_with(app, Some(&installed), None, &[PackageKind::ArchPkg], &[PackageKind::ArchPkg], true), Vec::<PackageKind>::new());
@@ -2217,8 +2217,8 @@ mod tests {
     #[test]
     fn release_arch_packages_are_updated_as_arch_pkg() {
         let pacman = |name: &str| Installed { version: None, source: InstallSource::Pacman, location: String::new(), package: Some(name.into()) };
-        let app = artcraft_launcher_core::CraftApp::by_id("filmcraft").unwrap();
-        let installed = pacman("ai.storyteller.filmcraft");
+        let app = artcraft_launcher_core::CraftApp::by_id("unitexto").unwrap();
+        let installed = pacman("ai.storyteller.unitexto");
         assert_eq!(managed_elsewhere_with(app, &installed, false, |_| None), None);
         assert_eq!(choose_kinds_with(app, Some(&installed), None, &[], &[], true), vec![PackageKind::ArchPkg]);
         assert_eq!(choose_kinds_with(app, Some(&installed), None, &[], &[PackageKind::ArchPkg], false), vec![PackageKind::ArchPkg]);
@@ -2226,7 +2226,7 @@ mod tests {
 
     #[test]
     fn unavailable_arch_package_not_selected_for_new_install() {
-        let app = artcraft_launcher_core::CraftApp::by_id("filmcraft").unwrap();
+        let app = artcraft_launcher_core::CraftApp::by_id("unitexto").unwrap();
         assert_eq!(choose_kinds_with(app, None, None, &[PackageKind::ArchPkg], &[], true), Vec::<PackageKind>::new());
         assert_eq!(choose_kinds_with(app, None, None, &[PackageKind::ArchPkg], &[], false), Vec::<PackageKind>::new());
         assert_eq!(choose_kinds_with(app, None, None, &[PackageKind::ArchPkg], &[PackageKind::ArchPkg], false), vec![PackageKind::ArchPkg]);

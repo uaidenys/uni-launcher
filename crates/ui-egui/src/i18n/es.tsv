@@ -115,7 +115,7 @@
 	yesterday	ayer
 	{month} {day}, {year}	{day} {month} {year}
 	Automatically	Automáticamente
-	Every Craft app	Todas las aplicaciones Craft
+	Every Uni app	Todas las aplicaciones Uni
 	Apps on this computer	Aplicaciones en este equipo
 	Installed apps with a newer version	Aplicaciones instaladas con una versión más reciente
 	Apps you can install	Aplicaciones que puedes instalar
@@ -161,6 +161,7 @@ vectorcraft	Vector illustration	Ilustración vectorial
 filmcraft	Video editing, color and sound	Edición de video, color y sonido
 lightcraft	Photo library and raw development	Fototeca y revelado RAW
 pdfcraft	Reading, organizing and protecting PDFs	Leer, organizar y proteger PDF
+unipdf	Reading, organizing and protecting PDFs	Leer, organizar y proteger PDF
 effectcraft	Motion graphics and visual effects	Gráficos en movimiento y efectos visuales
 designcraft	Page layout and publishing	Maquetación y publicación
 wordcraft	Writing and document design	Escritura y diseño de documentos
@@ -232,7 +233,6 @@ month	Dec	dic.
 	Couldn't check for updates: {f}	No se pudieron buscar actualizaciones: {f}
 	Website (coming soon)	Sitio web (próximamente)
 	GitHub repository	Repositorio en GitHub
-	Uni Launcher	Uni Launcher
 	Update 1 app	Actualizar 1 aplicación
 	Update all ({count})	Actualizar todas ({count})
 	⊞  Grid	⊞  Cuadrícula
@@ -330,9 +330,8 @@ filter	Installed	Instaladas
 @id	appearance.theme	Apariencia
 	Show Uni Launcher	Mostrar Uni Launcher
 	Check for Updates	Buscar actualizaciones
-	Visit getartcraft.com	Visitar getartcraft.com
+	Visit uniphar.com.br	Visitar uniphar.com.br
 	Uni Launcher on GitHub	Uni Launcher en GitHub
-	Join the Uni Launcher Discord	Únete al Discord de Uni Launcher
 @plural	Uni Launcher · {n} update available|Uni Launcher · {n} updates available	Uni Launcher · {n} actualización disponible|Uni Launcher · {n} actualizaciones disponibles
 	Install folder	Carpeta de instalación
 	Default install folder	Carpeta de instalación predeterminada

@@ -23,6 +23,7 @@ use crate::time::parse_rfc3339;
 use crate::version;
 
 /// Where the feed lives.
+/// ArtCraft's feed, for reference only: the Uni Launcher doesn't ask it (it doesn't list the Uni apps).
 pub const FEED_URL: &str = "https://api.storyteller.ai/v1/craft_apps/release_info";
 
 /// An app's entry is trusted for this long after storyteller-web fetched it.

@@ -308,9 +308,13 @@ mod tests {
             let Some(font) = crate::theme::cjk_font(lang) else { continue };
             let y_offset_factor = font.tweak.y_offset_factor;
             // A character the language's own catalog uses, so the sample fits its script: the face
-            // must draw it, on the Latin baseline.
-            let Some(sample) =
-                info.source.lines().filter_map(|line| line.split('\t').nth(2)).flat_map(str::chars).find(|c| !c.is_ascii() && c.is_alphabetic())
+            // must draw it, on the Latin baseline. Accented Latin (the company name) doesn't count.
+            let Some(sample) = info
+                .source
+                .lines()
+                .filter_map(|line| line.split('\t').nth(2))
+                .flat_map(str::chars)
+                .find(|c| *c >= '\u{2E80}' && c.is_alphabetic())
             else {
                 continue;
             };

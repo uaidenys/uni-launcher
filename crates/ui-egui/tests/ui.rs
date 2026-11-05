@@ -137,45 +137,49 @@ fn release(id: &str, v: &str, at: i64) -> Release {
     }
 }
 
-/// A realistic mix: updates, up-to-date apps, a download in progress, one app with no release.
+/// The release of `id` the feed reports; `i` spaces the release dates apart.
+fn latest(id: &str, v: &str, i: i64) -> Event {
+    Event::Latest { app: id.into(), latest: LatestRelease::Found(release(id, v, NOW - 86_400 - i * 600)), from: Origin::ArtCraftApi }
+}
+
+/// What detection found of `id`: installed at `version`, or not installed.
+fn detected(id: &str, version: Option<&str>) -> Event {
+    let name = SUITE.iter().find(|a| a.id == id).unwrap().name;
+    let installed = version.map(|v| Installed {
+        version: version::parse(v),
+        source: InstallSource::MacApp,
+        location: format!("/Applications/{name}.app"),
+        package: None,
+    });
+    Event::Detected { app: id.into(), installed }
+}
+
+/// Where most tests start: UniTexto has an update (0.4.1 → 0.5.0), UniPlanner is up to date
+/// (0.3.0) and UniPDF is not installed (0.4.0 available). A test that needs other states adds
+/// events after these, which win.
 fn events() -> Vec<Event> {
-    let mut ev = Vec::new();
-    let versions = [
-        ("unitexto", "0.5.0"),
-        ("vectorcraft", "0.7.0"),
-        ("filmcraft", "0.4.0"),
-        ("lightcraft", "0.4.0"),
-        ("pdfcraft", "0.4.0"),
-        ("effectcraft", "0.6.0"),
-        ("designcraft", "0.4.0"),
-        ("uniplanner", "0.3.0"),
-        ("deckcraft", "0.3.0"),
-        ("gridcraft", "0.3.0"),
-        ("cadcraft", "0.3.0"),
-    ];
-    for (i, (id, v)) in versions.iter().enumerate() {
-        ev.push(Event::Latest {
-            app: (*id).into(),
-            latest: LatestRelease::Found(release(id, v, NOW - 86_400 - i as i64 * 600)),
-            from: Origin::ArtCraftApi,
-        });
-    }
-    ev.push(Event::Latest { app: "soundcraft".into(), latest: LatestRelease::None, from: Origin::ArtCraftApi });
-    let installed = [("unitexto", "0.4.1"), ("lightcraft", "0.4.0"), ("uniplanner", "0.3.0"), ("effectcraft", "0.5.0")];
-    for app in &SUITE {
-        let inst = installed.iter().find(|(id, _)| *id == app.id).map(|(_, v)| Installed {
-            version: version::parse(v),
-            source: InstallSource::MacApp,
-            location: format!("/Applications/{}.app", app.name),
-            package: None,
-        });
-        ev.push(Event::Detected { app: app.id.into(), installed: inst });
-    }
-    ev.push(Event::Progress { app: "filmcraft".into(), phase: JobPhase::Downloading { done: 48 << 20, total: 131 << 20 } });
-    ev.push(Event::Paused { app: "deckcraft".into(), download: Some(PausedDownload { done: 30 << 20, total: 120 << 20 }) });
-    ev.push(Event::Progress { app: "gridcraft".into(), phase: JobPhase::Reconnecting { done: 10 << 20, total: 90 << 20 } });
-    ev.push(Event::ReadyToInstall { app: "cadcraft".into(), ready: true });
-    ev.push(Event::CheckFinished { at: NOW - 180, source: Source::GitHubApi, rate_limited_until: None });
+    vec![
+        latest("unitexto", "0.5.0", 0),
+        latest("uniplanner", "0.3.0", 1),
+        latest("unipdf", "0.4.0", 2),
+        detected("unitexto", Some("0.4.1")),
+        detected("uniplanner", Some("0.3.0")),
+        detected("unipdf", None),
+        Event::CheckFinished { at: NOW - 180, source: Source::GitHubApi, rate_limited_until: None },
+    ]
+}
+
+/// Both apps with an update: UniTexto 0.4.1 → 0.5.0 and UniPlanner 0.5.0 → 0.6.0.
+fn two_updates() -> Vec<Event> {
+    let mut ev = events();
+    ev.extend([latest("uniplanner", "0.6.0", 1), detected("uniplanner", Some("0.5.0"))]);
+    ev
+}
+
+/// Neither app installed.
+fn none_installed() -> Vec<Event> {
+    let mut ev = events();
+    ev.extend([detected("unitexto", None), detected("uniplanner", None)]);
     ev
 }
 
@@ -194,7 +198,7 @@ fn harness_with(
     manage: bool,
     scale: f32,
 ) -> (Harness<'static, Option<LauncherUi>>, Rc<RefCell<Vec<Command>>>) {
-    harness_full(events, view, theme, manage, scale, artcraft_launcher_ui_egui::TitleBar::Native, Rc::default(), None, None)
+    harness_full(events, view, theme, manage, scale, artcraft_launcher_ui_egui::TitleBar::Native, Rc::default(), None)
 }
 
 /// Like `harness_with`, with the details pictures answered as `pictures` says (changeable during the test).
@@ -206,7 +210,7 @@ fn harness_pictures(
     scale: f32,
     pictures: Rc<Cell<Pictures>>,
 ) -> (Harness<'static, Option<LauncherUi>>, Rc<RefCell<Vec<Command>>>) {
-    harness_full(events, view, theme, manage, scale, artcraft_launcher_ui_egui::TitleBar::Native, pictures, None, None)
+    harness_full(events, view, theme, manage, scale, artcraft_launcher_ui_egui::TitleBar::Native, pictures, None)
 }
 
 fn harness_with_title_bar(
@@ -217,21 +221,7 @@ fn harness_with_title_bar(
     scale: f32,
     bar: artcraft_launcher_ui_egui::TitleBar,
 ) -> (Harness<'static, Option<LauncherUi>>, Rc<RefCell<Vec<Command>>>) {
-    harness_full(events, view, theme, manage, scale, bar, Rc::default(), None, None)
-}
-
-fn harness_with_discord(discord_url: Option<&'static str>) -> (Harness<'static, Option<LauncherUi>>, Rc<RefCell<Vec<Command>>>) {
-    harness_full(
-        events(),
-        ViewMode::Grid,
-        egui::Theme::Dark,
-        true,
-        1.0,
-        artcraft_launcher_ui_egui::TitleBar::Native,
-        Rc::default(),
-        None,
-        discord_url,
-    )
+    harness_full(events, view, theme, manage, scale, bar, Rc::default(), None)
 }
 
 #[allow(clippy::too_many_arguments)] // Test fixture inputs vary independently across existing cases.
@@ -244,15 +234,11 @@ fn harness_full(
     bar: artcraft_launcher_ui_egui::TitleBar,
     pictures: Rc<Cell<Pictures>>,
     platform: Option<Platform>,
-    discord_url: Option<&'static str>,
 ) -> (Harness<'static, Option<LauncherUi>>, Rc<RefCell<Vec<Command>>>) {
-    struct HeaderHost(artcraft_launcher_ui_egui::TitleBar, Option<&'static str>);
+    struct HeaderHost(artcraft_launcher_ui_egui::TitleBar);
     impl Host for HeaderHost {
         fn title_bar(&self) -> artcraft_launcher_ui_egui::TitleBar {
             self.0
-        }
-        fn discord_url(&self) -> &'static str {
-            self.1.unwrap_or(artcraft_launcher_core::catalog::DISCORD_URL)
         }
     }
     // Integration tests compile without cfg!(test), so system_lang() picks up the
@@ -282,8 +268,8 @@ fn harness_full(
                 *state = Some(LauncherUi::new(ui.ctx(), b, s));
             }
             if let Some(l) = state.as_mut() {
-                l.logic(&ui.ctx().clone(), &mut HeaderHost(bar, discord_url));
-                l.ui(ui, &mut HeaderHost(bar, discord_url));
+                l.logic(&ui.ctx().clone(), &mut HeaderHost(bar));
+                l.ui(ui, &mut HeaderHost(bar));
             }
         },
         None,
@@ -429,7 +415,6 @@ fn windows_package_choice_can_select_portable_and_configures_the_backend() {
         artcraft_launcher_ui_egui::TitleBar::Native,
         Rc::default(),
         Some(Platform { os: Os::Windows, arch: Arch::X64 }),
-        None,
     );
     h.run_steps(8);
     h.get_by_label("Settings").click();
@@ -456,14 +441,14 @@ fn install_locations_survive_settings_save_and_older_settings_use_system_default
     settings.install_locations.per_app.insert("unitexto".into(), "/Volumes/Photo".into());
     let restored: Settings = serde_json::from_str(&serde_json::to_string(&settings).unwrap()).unwrap();
     assert_eq!(restored.install_locations.folder("unitexto"), Some("/Volumes/Photo"));
-    assert_eq!(restored.install_locations.folder("filmcraft"), Some("/Volumes/Craft Apps"));
+    assert_eq!(restored.install_locations.folder("uniplanner"), Some("/Volumes/Craft Apps"));
 }
 
 #[test]
 fn keeps_working_with_no_window_then_draws_in_a_new_one() {
     let sent = Rc::new(RefCell::new(Vec::new()));
     let backend =
-        Fake { events: events(), sent: sent.clone(), manage: true, pictures: Rc::default(), asked: Vec::new(), clock: Rc::new(Cell::new(NOW)) };
+        Fake { events: two_updates(), sent: sent.clone(), manage: true, pictures: Rc::default(), asked: Vec::new(), clock: Rc::new(Cell::new(NOW)) };
     let windowless = egui::Context::default();
     let mut ui = LauncherUi::new(&windowless, Box::new(backend), Settings { notify: false, ..Settings::default() });
     // No window: the backend's news is still taken in.
@@ -491,43 +476,54 @@ fn keeps_working_with_no_window_then_draws_in_a_new_one() {
 
 #[test]
 fn grid_shows_every_status_and_installs_on_click() {
-    let (mut h, sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
+    // An installed, up-to-date app carries no badge.
+    let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
+    h.run_steps(8);
+    assert_eq!(h.query_all_by_label("Installed · up to date").count(), 0, "an installed app carries no badge");
+    // Updates, with their versions.
+    let (mut h, sent) = harness_with(two_updates(), ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(8);
     snapshot(&mut h, "grid-dark");
-    // Statuses the user asked for: available, installed and up to date, update with version.
-    assert!(h.query_all_by_label("Available to install").count() >= 3);
-    assert_eq!(h.query_all_by_label("Installed · up to date").count(), 0, "an installed app carries no badge");
     h.get_by_label("Update to 0.5.0");
     h.get_by_label("Update to 0.6.0");
     // The version sits in the card's top strip, and the date under the description.
     h.get_by_label("0.4.1 → 0.5.0");
-    assert!(h.query_all_by_label("v0.4.0").count() >= 2);
     // Written like every other date ("Oct 7, 2026"); the day itself depends on the zone the test runs in.
     let updated: Vec<String> = h.query_all_by_label_contains("Last updated: ").filter_map(|n| n.accesskit_node().value()).collect();
     assert!(updated.len() >= 2, "{updated:?}");
     assert!(updated.iter().all(|l| l.starts_with("Last updated: Oct ") && l.ends_with(", 2026")), "{updated:?}");
     // The window has no title bar of its own here (the web build, and the tests).
     assert!(h.query_by_label("Close").is_none());
-    assert!(h.query_all_by_label_contains("Discord").count() >= 1); // the footer icon (the header has none)
-    assert!(h.query_by_label("Join the Uni Launcher community on Discord").is_none(), "no Discord link in the header");
-    assert!(h.query_all_by_label("Coming soon").count() >= 1);
-    h.get_by_label_contains("48 MB of 131 MB");
+    // Uniphar's social links are the footer's icons.
+    assert!(h.query_all_by_label("Instagram").count() >= 1);
     h.get_by_label("Update all (2)").click();
     h.run_steps(2);
     let installs: Vec<_> = sent.borrow().iter().filter_map(|c| if let Command::Install { app } = c { Some(app.clone()) } else { None }).collect();
     assert_eq!(installs.len(), 2, "{installs:?}");
-    assert!(installs.contains(&"unitexto".to_string()) && installs.contains(&"effectcraft".to_string()));
+    assert!(installs.contains(&"unitexto".to_string()) && installs.contains(&"uniplanner".to_string()));
+    // Not installed, and not released yet.
+    let mut ev = none_installed();
+    ev.push(Event::Latest { app: "uniplanner".into(), latest: LatestRelease::None, from: Origin::ArtCraftApi });
+    let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
+    h.run_steps(8);
+    assert_eq!(h.query_all_by_label("Available to install").count(), 2, "UniTexto and UniPDF");
+    h.get_by_label("v0.5.0");
+    assert!(h.query_all_by_label("Coming soon").count() >= 1);
+    // A download in progress.
+    let mut ev = none_installed();
+    ev.push(Event::Progress { app: "unitexto".into(), phase: JobPhase::Downloading { done: 48 << 20, total: 131 << 20 } });
+    let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
+    h.run_steps(8);
+    h.get_by_label_contains("48 MB of 131 MB");
 }
 
 #[test]
 fn downloads_can_be_paused_resumed_and_discarded() {
-    let (mut h, sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
-    h.run_steps(4);
-    // Bring the paused and reconnecting apps on screen.
-    if let Some(l) = h.state_mut().as_mut() {
-        l.settings.filter = artcraft_launcher_ui_egui::settings::Filter::NotInstalled;
-    }
-    h.run_steps(6);
+    let mut ev = none_installed();
+    ev.push(Event::Paused { app: "unitexto".into(), download: Some(PausedDownload { done: 30 << 20, total: 120 << 20 }) });
+    ev.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Reconnecting { done: 10 << 20, total: 90 << 20 } });
+    let (mut h, sent) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
+    h.run_steps(10);
     snapshot(&mut h, "grid-downloads-dark");
     h.get_by_label("Download paused");
     h.get_by_label("Reconnecting…");
@@ -535,10 +531,10 @@ fn downloads_can_be_paused_resumed_and_discarded() {
     h.run_steps(3);
     h.get_all_by_role_and_label(egui::accesskit::Role::Button, "Install").last().unwrap().click();
     h.run_steps(2);
-    assert!(sent.borrow().contains(&Command::Install { app: "deckcraft".into() }));
+    assert!(sent.borrow().contains(&Command::Install { app: "unitexto".into() }));
     h.get_by_label("Discard download").click();
     h.run_steps(2);
-    assert!(sent.borrow().contains(&Command::Cancel { app: "deckcraft".into() }));
+    assert!(sent.borrow().contains(&Command::Cancel { app: "unitexto".into() }));
     h.get_all_by_label("Pause download").next().unwrap().click();
     h.run_steps(2);
     assert!(sent.borrow().iter().any(|c| matches!(c, Command::Pause { .. })));
@@ -546,12 +542,10 @@ fn downloads_can_be_paused_resumed_and_discarded() {
 
 #[test]
 fn a_kept_download_offers_retry_install_and_download_again() {
-    let (mut h, sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
-    h.run_steps(4);
-    if let Some(l) = h.state_mut().as_mut() {
-        l.settings.filter = artcraft_launcher_ui_egui::settings::Filter::NotInstalled;
-    }
-    h.run_steps(6);
+    let mut ev = none_installed();
+    ev.push(Event::ReadyToInstall { app: "unitexto".into(), ready: true });
+    let (mut h, sent) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
+    h.run_steps(10);
     // Below the fold in the restyled grid: bring the card on screen first.
     h.get_by_label("Retry install").scroll_to_me();
     h.run_steps(4);
@@ -564,7 +558,7 @@ fn a_kept_download_offers_retry_install_and_download_again() {
     assert!(sent.borrow().is_empty());
     h.get_all_by_role_and_label(egui::accesskit::Role::Button, "Install").last().unwrap().click();
     h.run_steps(2);
-    assert_eq!(*sent.borrow(), [Command::Install { app: "cadcraft".into() }]);
+    assert_eq!(*sent.borrow(), [Command::Install { app: "unitexto".into() }]);
     sent.borrow_mut().clear();
     // The … menu beside it.
     let beside = |r: egui::Rect| row.y_range().contains(r.center().y) && (row.right()..row.right() + 60.0).contains(&r.left());
@@ -573,10 +567,10 @@ fn a_kept_download_offers_retry_install_and_download_again() {
     snapshot(&mut h, "grid-retry-install-menu-dark");
     h.get_by_label("Download again").click();
     h.run_steps(3);
-    assert_eq!(*sent.borrow(), [Command::Cancel { app: "cadcraft".into() }]);
+    assert_eq!(*sent.borrow(), [Command::Cancel { app: "unitexto".into() }]);
     h.get_all_by_role_and_label(egui::accesskit::Role::Button, "Install").last().unwrap().click();
     h.run_steps(2);
-    assert_eq!(*sent.borrow(), [Command::Cancel { app: "cadcraft".into() }, Command::Install { app: "cadcraft".into() }]);
+    assert_eq!(*sent.borrow(), [Command::Cancel { app: "unitexto".into() }, Command::Install { app: "unitexto".into() }]);
     // Apps without a kept download don't offer it.
     assert_eq!(h.query_all_by_label("Retry install").count(), 1);
 }
@@ -584,24 +578,32 @@ fn a_kept_download_offers_retry_install_and_download_again() {
 #[test]
 fn a_dismissed_install_prompt_is_not_called_a_cancelled_download() {
     let finished = |app: &str, why: &str| Event::JobFinished { app: app.into(), result: Err(why.into()) };
-    // The password prompt was dismissed with the download kept (cadcraft) and without (pdfcraft);
-    // a download was cancelled (vectorcraft).
-    let mut ev = events();
-    ev.push(finished("cadcraft", INSTALL_CANCELLED));
-    ev.push(finished("pdfcraft", INSTALL_CANCELLED));
-    ev.push(finished("vectorcraft", CANCELLED));
+    // The password prompt was dismissed with the download kept (UniTexto) and without (UniPlanner).
+    let mut ev = none_installed();
+    ev.push(Event::ReadyToInstall { app: "unitexto".into(), ready: true });
+    ev.push(finished("unitexto", INSTALL_CANCELLED));
+    ev.push(finished("uniplanner", INSTALL_CANCELLED));
     let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
     snapshot(&mut h, "grid-install-cancelled-dark");
-    for toast in ["Install cancelled. The download is kept for the next try.", "Install cancelled", "Download cancelled"] {
+    for toast in ["Install cancelled. The download is kept for the next try.", "Install cancelled"] {
         assert_eq!(h.query_all_by_label(toast).count(), 1, "{toast}");
     }
+    assert!(h.query_by_label("Download cancelled").is_none());
+    // A download that was cancelled says so.
+    let mut ev = none_installed();
+    ev.push(finished("uniplanner", CANCELLED));
+    let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
+    h.run_steps(6);
+    assert_eq!(h.query_all_by_label("Download cancelled").count(), 1);
 }
 
 #[test]
 fn a_kept_update_names_its_version_and_an_up_to_date_app_is_not_downloaded_again() {
+    // UniTexto's 0.6.0 update is downloaded already.
     let mut ev = events();
-    for app in ["effectcraft", "uniplanner"] {
+    ev.push(latest("unitexto", "0.6.0", 0));
+    for app in ["unitexto", "uniplanner"] {
         ev.push(Event::ReadyToInstall { app: app.into(), ready: true });
     }
     let (mut h, sent) = harness_with(ev, ViewMode::Table, egui::Theme::Dark, true, 1.0);
@@ -611,7 +613,7 @@ fn a_kept_update_names_its_version_and_an_up_to_date_app_is_not_downloaded_again
     assert!(h.query_by_label("Update to 0.6.0").is_none());
     h.get_by_label("Retry update to 0.6.0").click();
     h.run_steps(2);
-    assert_eq!(*sent.borrow(), [Command::Install { app: "effectcraft".into() }]);
+    assert_eq!(*sent.borrow(), [Command::Install { app: "unitexto".into() }]);
     // UniPlanner is up to date: its menu offers Reinstall, which uses the kept file.
     let row = h.get_all_by_label("UniPlanner").next().unwrap().rect().center().y;
     h.get_all_by_label("…").find(|n| (n.rect().center().y - row).abs() < 25.0).unwrap().click();
@@ -625,7 +627,7 @@ fn an_install_waiting_for_another_says_so_and_can_be_cancelled() {
     let mut events = events();
     // Two updates reached the system's installer together: one runs, the other waits its turn.
     events.push(Event::Progress { app: "unitexto".into(), phase: JobPhase::Installing });
-    events.push(Event::Progress { app: "effectcraft".into(), phase: JobPhase::Waiting });
+    events.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Waiting });
     let (mut h, sent) = harness_with(events, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
     snapshot(&mut h, "grid-waiting-dark");
@@ -635,7 +637,7 @@ fn an_install_waiting_for_another_says_so_and_can_be_cancelled() {
     h.get_by_label("Cancel").click();
     h.run_steps(2);
     let cancels: Vec<_> = sent.borrow().iter().filter(|c| matches!(c, Command::Cancel { .. })).cloned().collect();
-    assert_eq!(cancels, [Command::Cancel { app: "effectcraft".into() }]);
+    assert_eq!(cancels, [Command::Cancel { app: "uniplanner".into() }]);
 }
 
 #[test]
@@ -658,15 +660,16 @@ fn each_cancellation_says_what_it_called_off() {
     let finished = |app: &str, why: &str| Event::JobFinished { app: app.into(), result: Err(why.into()) };
     let mut ev = events();
     // An uninstall called off while it waited for the installer.
-    ev.push(Event::Progress { app: "lightcraft".into(), phase: JobPhase::Removing });
-    ev.push(Event::Progress { app: "lightcraft".into(), phase: JobPhase::Waiting });
-    ev.push(finished("lightcraft", CANCELLED));
+    ev.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Removing });
+    ev.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Waiting });
+    ev.push(finished("uniplanner", CANCELLED));
     // The launcher's own update, cancelled while it waited.
     ev.push(Event::LauncherUpdate(release("artcraft-launcher", "0.2.0", NOW)));
     ev.push(Event::Progress { app: "artcraft-launcher".into(), phase: JobPhase::Waiting });
     ev.push(finished("artcraft-launcher", CANCELLED));
     // A download cancelled mid-way.
-    ev.push(finished("filmcraft", CANCELLED));
+    ev.push(Event::Progress { app: "unitexto".into(), phase: JobPhase::Downloading { done: 1 << 20, total: 10 << 20 } });
+    ev.push(finished("unitexto", CANCELLED));
     let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
     for toast in ["Uninstall cancelled", "Update cancelled", "Download cancelled"] {
@@ -743,12 +746,12 @@ fn name_and_tagline_are_centred_on_the_icon() {
         let (mut h, _) = harness_at(ViewMode::Grid, egui::Theme::Dark, true, scale);
         h.run_steps(8);
         snapshot(&mut h, &format!("grid-dark{suffix}"));
-        let off = below_icon_centre(&h, &["UniTexto", "Image editing"]);
+        let off = below_icon_centre(&h, &["UniTexto", "Writing and document design"]);
         assert!(off.abs() < 0.25, "grid at {scale}x: {off}");
         let (mut h, _) = harness_at(ViewMode::Table, egui::Theme::Light, true, scale);
         h.run_steps(8);
         snapshot(&mut h, &format!("table-light{suffix}"));
-        let off = below_icon_centre(&h, &["UniTexto", "Image editing"]);
+        let off = below_icon_centre(&h, &["UniTexto", "Writing and document design"]);
         assert!(off.abs() < 0.25, "table at {scale}x: {off}");
     }
 }
@@ -775,43 +778,41 @@ fn order(h: &Harness<'_, Option<LauncherUi>>) -> Vec<String> {
 fn every_table_column_sorts_both_ways() {
     let (mut h, _) = harness(ViewMode::Table, egui::Theme::Dark, true);
     h.run_steps(6);
-    // Status: apps with an update first (suite order breaks the tie), then the up to date ones.
+    // Status: the app with an update first, then the up to date one, then the one not installed.
     h.get_by_label("Status").click();
     h.run_steps(3);
     let o = order(&h);
-    assert_eq!(&o[..4], ["UniTexto", "EffectCraft", "LightCraft", "UniPlanner"], "{o:?}");
-    // Reversed: the apps not installed first, then up to date, then the updates last. The table
-    // keeps its column's order; only the grid puts installed apps above the rest.
+    assert_eq!(o, ["UniTexto", "UniPlanner", "UniPDF"], "{o:?}");
+    // Reversed: not installed first, then up to date, the update last.
     h.get_by_label("Status").click();
     h.run_steps(3);
     let o = order(&h);
-    assert_eq!(&o[o.len().saturating_sub(4)..], ["LightCraft", "UniPlanner", "UniTexto", "EffectCraft"], "{o:?}");
+    assert_eq!(o, ["UniPDF", "UniPlanner", "UniTexto"], "{o:?}");
     // The old Installed and Latest columns are gone; Version shows the number, and from and to for an update.
     assert!(h.query_by_label("Latest").is_none());
     h.get_by_label("Version");
-    assert!(h.query_all_by_label("0.4.0").count() >= 2);
+    h.get_by_label("0.3.0");
     h.get_by_label("0.4.1 → 0.5.0");
-    h.get_by_label("0.5.0 → 0.6.0");
     snapshot(&mut h, "table-sorted-status");
-    // App: Z to A on the second click.
+    // App: A to Z, then Z to A on the second click.
     h.get_by_label("App").click();
     h.run_steps(3);
+    assert_eq!(order(&h), ["UniPDF", "UniPlanner", "UniTexto"]);
     h.get_by_label("App").click();
     h.run_steps(3);
-    let o = order(&h);
-    assert_eq!(o.first().map(String::as_str), Some("UniPlanner"), "{o:?}");
+    assert_eq!(order(&h), ["UniTexto", "UniPlanner", "UniPDF"]);
 }
 
 #[test]
-fn settings_link_to_discord() {
+fn settings_link_to_the_community() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
     h.get_by_label("Settings").click();
     h.run_steps(4);
     snapshot(&mut h, "settings-dark");
     h.get_by_label("Questions, ideas and news from the Uni Launcher team");
-    // The footer icon and the button in Settings.
-    assert!(h.query_all_by_label_contains("Discord").count() >= 2);
+    // The footer icon and the one in Settings.
+    assert!(h.query_all_by_label("Instagram").count() >= 2);
 }
 
 #[test]
@@ -843,19 +844,20 @@ fn the_uninstall_prompt_keeps_its_own_size_after_a_taller_dialog() {
 fn links_to_the_website_github_and_each_apps_pages() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
-    // Footer: website, GitHub and Discord.
-    for label in ["Website", "GitHub", "Discord"] {
+    // Footer: website, GitHub and Uniphar's social accounts.
+    for label in ["Website", "GitHub", "Instagram"] {
         assert!(h.query_all_by_label(label).count() >= 1, "{label}");
     }
-    // Cards: every app links to its repo and to its own page on getartcraft.com (plus the footer's).
+    // Cards: every app links to its repo (plus the footer's).
     let shown_cards = h.query_all_by_label("GitHub").count() - 1;
     let shown_sites = h.query_all_by_label("Website").count() - 1;
-    assert!(shown_cards >= 13, "{shown_cards}");
+    assert_eq!(shown_cards, SUITE.len(), "{shown_cards}");
     assert_eq!(shown_sites, 0, "the cards only link to GitHub; the website is the footer's icon");
     // The table's … menu has the app's website and GitHub repo.
     let (mut h, _) = harness(ViewMode::Table, egui::Theme::Dark, true);
     h.run_steps(6);
-    h.get_all_by_label("…").nth(8).unwrap().click(); // UniPlanner
+    let row = h.get_all_by_label("UniPlanner").next().unwrap().rect().center().y;
+    h.get_all_by_label("…").find(|n| (n.rect().center().y - row).abs() < 25.0).unwrap().click();
     h.run_steps(3);
     h.get_by_label("GitHub repository");
     // The footer's Website link and UniPlanner's now-live one in the menu.
@@ -892,33 +894,22 @@ fn all_opened(h: &mut Harness<'_, Option<LauncherUi>>, label: &str) -> Vec<Strin
 fn links_open_the_right_pages() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
-    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://discord.gg/artcraft"));
     // The footer's Uni Launcher links and each card's own pages.
     let github = all_opened(&mut h, "GitHub");
-    assert!(github.contains(&"https://github.com/storytold".to_string()), "{github:?}");
+    assert!(github.contains(&"https://github.com/uaidenys".to_string()), "{github:?}");
     assert!(github.contains(&"https://github.com/uaidenys/unitexto".to_string()), "{github:?}");
     let sites = all_opened(&mut h, "Website");
-    assert!(sites.contains(&"https://getartcraft.com".to_string()), "{sites:?}");
-    assert_eq!(sites, vec!["https://getartcraft.com".to_string()], "{sites:?}");
-    // Social icons in the footer.
-    assert_eq!(click_opens(&mut h, "X").as_deref(), Some("https://x.com/get_artcraft"));
-    assert_eq!(click_opens(&mut h, "YouTube").as_deref(), Some("https://www.youtube.com/@OfficialArtcraftStudios"));
-    assert_eq!(click_opens(&mut h, "TikTok").as_deref(), Some("https://www.tiktok.com/@artcraft.studios"));
-    assert_eq!(click_opens(&mut h, "Instagram").as_deref(), Some("https://www.instagram.com/officialartcraftstudios"));
-    assert_eq!(click_opens(&mut h, "LinkedIn").as_deref(), Some("https://www.linkedin.com/company/artcraft-ai"));
+    assert_eq!(sites, vec!["https://uniphar.com.br/".to_string()], "{sites:?}");
+    // Uniphar's social accounts in the footer.
+    for (name, url) in artcraft_launcher_core::catalog::SOCIAL {
+        assert_eq!(click_opens(&mut h, name).as_deref(), Some(url), "{name}");
+    }
     // The … menu.
     h.get_all_by_label("…").next().unwrap().click();
     h.run_steps(3);
     // The first card is the first installed app by name.
     let url = click_opens(&mut h, "All releases").unwrap_or_default();
     assert!(url.starts_with("https://github.com/uaidenys/") && url.ends_with("/releases"), "{url}");
-}
-
-#[test]
-fn discord_link_opens_app_when_discord_is_installed() {
-    let (mut h, _) = harness_with_discord(Some(artcraft_launcher_core::catalog::DISCORD_APP_URL));
-    h.run_steps(6);
-    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("discord://-/invite/artcraft"));
 }
 
 #[test]
@@ -1068,7 +1059,7 @@ fn feed_announcements_and_alerts_show_until_dismissed() {
     let sent = Rc::new(RefCell::new(Vec::new()));
     let mut evs = events();
     evs.push(Event::Notices {
-        announcements: vec![notice("a1", "CADCraft 1.0 is out", Some("https://getartcraft.com/news"))],
+        announcements: vec![notice("a1", "UniPlanner 1.0 is out", Some("https://getartcraft.com/news"))],
         alerts: vec![notice("x1", "Security update", Some("https://getartcraft.com/security"))],
     });
     let mut backend = Some(Fake { events: evs, sent, manage: true, pictures: Rc::default(), asked: Vec::new(), clock: Rc::new(Cell::new(NOW)) });
@@ -1095,11 +1086,11 @@ fn feed_announcements_and_alerts_show_until_dismissed() {
     assert!(h.query_by_label("Security update").is_none());
     assert!(h.state().as_ref().unwrap().settings.dismissed_notices.contains("x1"));
     // The announcement stays inline until dismissed.
-    h.get_by_label("CADCraft 1.0 is out");
+    h.get_by_label("UniPlanner 1.0 is out");
     h.get_by_label("Learn more");
     h.get_all_by_label("Dismiss").next().unwrap().click();
     h.run_steps(4);
-    assert!(h.query_by_label("CADCraft 1.0 is out").is_none());
+    assert!(h.query_by_label("UniPlanner 1.0 is out").is_none());
     assert!(h.state().as_ref().unwrap().settings.dismissed_notices.contains("a1"));
 }
 
@@ -1114,7 +1105,7 @@ fn automatic_checks_run_every_five_minutes() {
 
 #[test]
 fn automatic_updates_queue_installs_for_outdated_apps_and_launcher() {
-    let mut ev = events();
+    let mut ev = two_updates();
     ev.push(Event::LauncherUpdate(release("artcraft-launcher", "0.2.0", NOW)));
     let sent = Rc::new(RefCell::new(Vec::new()));
     let sent2 = sent.clone();
@@ -1137,7 +1128,7 @@ fn automatic_updates_queue_installs_for_outdated_apps_and_launcher() {
     h.run_steps(4);
     let commands = sent.borrow().clone();
     assert!(commands.contains(&Command::Install { app: "unitexto".into() }), "outdated unitexto should be queued for install: {commands:?}");
-    assert!(commands.contains(&Command::Install { app: "effectcraft".into() }), "outdated effectcraft should be queued for install: {commands:?}");
+    assert!(commands.contains(&Command::Install { app: "uniplanner".into() }), "outdated uniplanner should be queued for install: {commands:?}");
     assert!(commands.contains(&Command::UpdateLauncher), "launcher update should be queued: {commands:?}");
 }
 
@@ -1203,10 +1194,10 @@ fn the_footer_names_the_services_behind_what_is_on_screen() {
 
 #[test]
 fn web_build_offers_downloads() {
-    let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, false);
+    let (mut h, _) = harness_with(none_installed(), ViewMode::Grid, egui::Theme::Dark, false, 1.0);
     h.run_steps(8);
     snapshot(&mut h, "web-grid-dark");
-    assert!(h.query_all_by_label("Download for macOS").count() >= 8);
+    assert_eq!(h.query_all_by_label("Download for macOS").count(), SUITE.len());
     assert!(h.query_by_label("Install").is_none());
 }
 
@@ -1254,31 +1245,25 @@ fn custom_title_bar_has_window_buttons() {
 fn clicking_a_card_opens_its_details_drawer() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
-    // Every app has a page: a card of each generation opens one.
-    h.get_by_label("VectorCraft details");
+    // Every app has a page.
     h.get_by_label("UniPlanner details");
     h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-dark");
-    h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
-    h.get_by_label_contains("Curves and type layers · 1/4");
+    h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
     // The links the page offers as buttons of their own.
     h.get_by_label("Website ↗");
     h.get_by_label("GitHub ↗");
     h.get_by_label("Releases ↗");
-    // The picture arrows wrap around, and the thumbnails jump.
-    h.get_by_label("Previous picture (←)").click();
-    h.run_steps(3);
-    h.get_by_label_contains("Selections and masked adjustments · 4/4");
-    h.get_by_label("Next picture (→)").click();
-    h.run_steps(3);
-    h.get_by_label_contains("Curves and type layers · 1/4");
     // Esc closes it and the page is gone once it has slid out.
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
     // Only the card's own line is left once the page has slid out.
-    assert_eq!(h.query_all_by_label_contains("The image editor you already know").count(), 1);
+    assert_eq!(h.query_all_by_label_contains(TEXTO_HEADLINE).count(), 1);
 }
+
+/// UniTexto's page headline, which its card shows too.
+const TEXTO_HEADLINE: &str = "The familiar word processor, native and offline.";
 
 #[test]
 fn details_drawer_in_the_light_theme() {
@@ -1287,14 +1272,18 @@ fn details_drawer_in_the_light_theme() {
     h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-light");
-    h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
+    h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
 }
 
 fn fetches(sent: &Rc<RefCell<Vec<Command>>>, app: &str) -> usize {
     sent.borrow().iter().filter(|c| matches!(c, Command::FetchScreenshots { app: a } if a == app)).count()
 }
 
+// The tests below need a page with pictures, and no Uni app has screenshots published yet. They
+// are kept, ignored, for when UniTexto's are: its captions will have to replace the old ones.
+
 #[test]
+#[ignore = "no Uni app page has screenshots yet"]
 fn opening_a_page_asks_for_its_pictures_once_and_only_while_it_lacks_some() {
     let (mut h, sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
@@ -1310,24 +1299,17 @@ fn opening_a_page_asks_for_its_pictures_once_and_only_while_it_lacks_some() {
     h.run_steps(10);
     assert_eq!(fetches(&sent, "unitexto"), 1);
     h.get_by_label("Enlarge picture");
-    // Another page asks for its own, and a page without pictures asks for nothing.
+    // Another page asks for its own only if it has pictures.
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
-    h.get_by_label("VectorCraft details").scroll_to_me();
-    h.run_steps(3);
-    h.get_by_label("VectorCraft details").click();
+    h.get_by_label("UniPlanner details").click();
     h.run_steps(10);
-    assert_eq!(fetches(&sent, "vectorcraft"), 1);
-    h.key_press(egui::Key::Escape);
-    h.run_steps(10);
-    h.get_by_label("PdfCraft details").scroll_to_me();
-    h.run_steps(3);
-    h.get_by_label("PdfCraft details").click();
-    h.run_steps(10);
-    assert_eq!(fetches(&sent, "pdfcraft"), 0);
+    let planner_has_pictures = !AppDetails::by_id("uniplanner").unwrap().shots.is_empty();
+    assert_eq!(fetches(&sent, "uniplanner"), usize::from(planner_has_pictures));
 }
 
 #[test]
+#[ignore = "no Uni app page has screenshots yet"]
 fn a_frame_stands_in_for_the_pictures_until_they_arrive() {
     let pictures = Rc::new(Cell::new(Pictures::Silent));
     let (mut h, sent) = harness_pictures(events(), ViewMode::Grid, egui::Theme::Dark, true, 1.0, pictures.clone());
@@ -1338,7 +1320,7 @@ fn a_frame_stands_in_for_the_pictures_until_they_arrive() {
     h.get_by_label("Loading pictures…");
     assert!(h.query_by_label("Enlarge picture").is_none(), "there is nothing to enlarge yet");
     // The rest of the page is there, and the arrows work on the frames.
-    h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
+    h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
     h.get_by_label("Next picture (→)").click();
     h.run_steps(3);
     h.get_by_label_contains("Levels with a live histogram · 2/4");
@@ -1351,6 +1333,7 @@ fn a_frame_stands_in_for_the_pictures_until_they_arrive() {
 }
 
 #[test]
+#[ignore = "no Uni app page has screenshots yet"]
 fn offline_the_frame_says_so_and_opening_the_page_again_retries() {
     let pictures = Rc::new(Cell::new(Pictures::Offline));
     let (mut h, sent) = harness_pictures(events(), ViewMode::Grid, egui::Theme::Light, true, 1.0, pictures.clone());
@@ -1361,7 +1344,7 @@ fn offline_the_frame_says_so_and_opening_the_page_again_retries() {
     h.get_by_label("Pictures couldn't be loaded. Reopen this page to try again.");
     assert!(h.query_by_label("Loading pictures…").is_none());
     assert!(h.query_by_label("Enlarge picture").is_none());
-    h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
+    h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
     // Back online: the page is closed and opened again, which asks again.
     pictures.set(Pictures::Online);
     h.key_press(egui::Key::Escape);
@@ -1374,6 +1357,7 @@ fn offline_the_frame_says_so_and_opening_the_page_again_retries() {
 }
 
 #[test]
+#[ignore = "no Uni app page has screenshots yet"]
 fn the_enlarged_view_shows_a_frame_for_a_picture_still_missing() {
     let pictures = Rc::new(Cell::new(Pictures::SecondFails));
     let (mut h, _sent) = harness_pictures(events(), ViewMode::Grid, egui::Theme::Dark, true, 1.0, pictures);
@@ -1397,19 +1381,19 @@ fn the_enlarged_view_shows_a_frame_for_a_picture_still_missing() {
 fn a_page_without_pictures_has_no_gallery() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
-    // PdfCraft's screenshots still show its old name (PrintCraft), so its page has none for now.
-    h.get_by_label("PdfCraft details").scroll_to_me();
-    h.run_steps(3);
-    h.get_by_label("PdfCraft details").click();
+    // No Uni app has screenshots published yet.
+    h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     snapshot(&mut h, "details-no-pictures-dark");
-    h.get_all_by_label_contains("The open-source PDF workbench.").last().unwrap();
-    h.get_by_label_contains("Search as you type");
+    h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
+    h.get_by_label_contains("Paragraph layout is cached");
+    assert!(h.query_by_label("Loading pictures…").is_none());
     assert!(h.query_by_label("Enlarge picture").is_none());
     assert!(h.query_by_label("Next picture (→)").is_none());
 }
 
 #[test]
+#[ignore = "no Uni app page has screenshots yet"]
 fn the_lead_picture_can_be_enlarged() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(8);
@@ -1429,20 +1413,20 @@ fn the_lead_picture_can_be_enlarged() {
     h.key_press(egui::Key::Escape);
     h.run_steps(4);
     assert_eq!(h.query_all_by_label("Close (Esc)").count(), 1);
-    h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
+    h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
     h.key_press(egui::Key::Escape);
     h.run_steps(10);
     // Only the card's own line is left once the page has slid out.
-    assert_eq!(h.query_all_by_label_contains("The image editor you already know").count(), 1);
+    assert_eq!(h.query_all_by_label_contains(TEXTO_HEADLINE).count(), 1);
 }
 
-/// Every page, whatever it holds: no pictures (PdfCraft), one (DesignCraft) or several. The arrow keys are
+/// Every page, whatever it holds: no pictures, one or several. The arrow keys are
 /// pressed more often than there are pictures, both ways, to wrap around the list and to do nothing on a
 /// page that has one or none; the enlarged view is opened wherever there is a picture to enlarge.
 #[test]
 fn every_page_opens_and_pages_through_its_pictures() {
     let (mut h, _sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
-    // Tall enough to show all thirteen cards at once.
+    // Tall enough to show every card at once.
     h.set_size(egui::vec2(1180.0, 3000.0));
     h.run_steps(8);
     for d in &artcraft_launcher_core::details::DETAILS {
@@ -1494,7 +1478,9 @@ fn the_drawer_and_the_enlarged_picture_survive_any_window_size() {
     h.get_by_label("UniTexto details").click();
     h.run_steps(10);
     let sizes = [(1180.0, 900.0), (720.0, 500.0), (480.0, 320.0), (320.0, 200.0), (120.0, 90.0), (40.0, 30.0), (4000.0, 2400.0)];
-    for zoom in [false, true] {
+    // The enlarged picture too, once the page has one.
+    let has_pictures = !AppDetails::by_id("unitexto").unwrap().shots.is_empty();
+    for zoom in [false, true].into_iter().filter(|zoom| !zoom || has_pictures) {
         if zoom {
             h.get_by_label("Enlarge picture").click();
             h.run_steps(3);
@@ -1510,7 +1496,7 @@ fn the_drawer_and_the_enlarged_picture_survive_any_window_size() {
             h.key_press(egui::Key::Escape);
             h.run_steps(3);
         }
-        h.get_all_by_label_contains("The image editor you already know how to use").last().unwrap();
+        h.get_all_by_label_contains(TEXTO_HEADLINE).last().unwrap();
     }
 }
 
@@ -1546,14 +1532,15 @@ fn the_rate_limit_notice_never_runs_under_the_footer_links() {
         // Full or short, the notice says when GitHub can be asked again.
         let notice = h.get_by_label_contains("in 30 min").rect();
         let checked = h.get_by_label_contains("Checked ").rect();
-        // Cut short in a narrow window, but enough of it left to read.
-        assert!(notice.width() >= 120.0 && notice.right() <= width, "{width}: notice {notice:?}");
-        // Everything on the footer's right: the website, GitHub and Discord icons and the social icons.
+        // Cut short in a narrow window, but enough of it left to read (the SAC phone shares the row).
+        assert!(notice.width() >= 100.0 && notice.right() <= width, "{width}: notice {notice:?}");
+        // Everything on the footer's right: the website and GitHub icons and the social icons.
+        let labels = ["Website", "GitHub"].into_iter().chain(artcraft_launcher_core::catalog::SOCIAL.map(|(name, _)| name));
         let mut right = Vec::new();
-        for label in ["Website", "GitHub", "Discord", "X", "YouTube", "TikTok", "Instagram", "LinkedIn"] {
+        for label in labels {
             right.extend(h.query_all_by_label(label).map(|n| n.rect()).filter(|r| (r.center().y - notice.center().y).abs() < 12.0));
         }
-        assert_eq!(right.len(), 8, "{width}: {right:?}");
+        assert_eq!(right.len(), 2 + artcraft_launcher_core::catalog::SOCIAL.len(), "{width}: {right:?}");
         assert!(h.query_by_label_contains("Installing for").is_none(), "{width}: the footer no longer names the platform");
         for r in right {
             assert!(!r.intersects(notice), "{width}: notice {notice:?} overlaps {r:?}");
@@ -1674,7 +1661,8 @@ fn short_window(reduce: Rc<Cell<bool>>) -> Harness<'static, Option<LauncherUi>> 
     let mut backend =
         Some(Fake { events, sent: Rc::default(), manage: true, pictures: Rc::default(), asked: Vec::new(), clock: Rc::new(Cell::new(NOW)) });
     let mut host = OsMotion(reduce);
-    let mut h = Harness::builder().with_size(egui::vec2(1180.0, 500.0)).with_step_dt(1.0 / 60.0).with_max_steps(120).build_ui_state(
+    // Two cards fit a desktop window, so this one is short enough that the grid scrolls.
+    let mut h = Harness::builder().with_size(egui::vec2(1180.0, 300.0)).with_step_dt(1.0 / 60.0).with_max_steps(120).build_ui_state(
         move |ui, state: &mut Option<LauncherUi>| {
             if state.is_none()
                 && let Some(b) = backend.take()
@@ -1695,13 +1683,13 @@ fn short_window(reduce: Rc<Cell<bool>>) -> Harness<'static, Option<LauncherUi>> 
 
 /// How far down the window the grid's first card is.
 fn grid_top(h: &Harness<'_, Option<LauncherUi>>) -> f32 {
-    h.get_by_label("Image editing").rect().top()
+    h.get_by_label("Writing and document design").rect().top()
 }
 
 /// Turns the mouse wheel `lines` down over the grid, by way of the shell's `raw_input_hook`. The
 /// next frame takes it in.
 fn turn_wheel(h: &mut Harness<'_, Option<LauncherUi>>, lines: f32) {
-    h.hover_at(egui::pos2(590.0, 300.0));
+    h.hover_at(egui::pos2(590.0, 200.0));
     h.run_steps(2);
     let wheel = egui::Event::MouseWheel {
         unit: egui::MouseWheelUnit::Line,
@@ -1765,7 +1753,7 @@ fn with_animations_on_the_wheel_glides() {
 /// Moves the pointer from one card to the next. Returns how many frames are drawn before the
 /// window is still again.
 fn frames_to_hover_the_next_card(h: &mut Harness<'_, Option<LauncherUi>>) -> u64 {
-    let cards: Vec<egui::Pos2> = ["Image editing", "Vector illustration"].map(|t| h.get_by_label(t).rect().center()).to_vec();
+    let cards: Vec<egui::Pos2> = ["Writing and document design", "Spreadsheets and data"].map(|t| h.get_by_label(t).rect().center()).to_vec();
     // Still to begin with: the icons are in, the first card is lit and the scroll bar is showing.
     h.hover_at(cards[0]);
     h.run();
@@ -1883,16 +1871,20 @@ fn an_occupied_folder_asks_before_replacing_it() {
 
 #[test]
 fn a_not_installed_card_is_grey_until_the_pointer_is_over_it() {
-    let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
+    let mut ev = events();
+    ev.push(detected("uniplanner", None));
+    let (mut h, _) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.set_size(egui::vec2(1180.0, 1100.0));
     h.run_steps(8);
-    let icon = h.get_by_label("CADCraft icon").rect();
-    // The most colourful pixel in the icon: how far apart its red, green and blue are.
+    let icon = h.get_by_label("UniPlanner icon").rect();
+    // The most colourful pixel in the icon: how far apart its red, green and blue are. Only its
+    // middle, as the card's navy shows at its rounded corners.
+    let inner = icon.shrink2(icon.size() * 0.25);
     let colour = |h: &mut Harness<'_, Option<LauncherUi>>| {
         let image = h.render().unwrap();
         let mut most = 0_i32;
-        for y in icon.top() as u32..icon.bottom() as u32 {
-            for x in icon.left() as u32..icon.right() as u32 {
+        for y in inner.top() as u32..inner.bottom() as u32 {
+            for x in inner.left() as u32..inner.right() as u32 {
                 let p = image.get_pixel(x, y).0;
                 let (hi, lo) = (p[0].max(p[1]).max(p[2]), p[0].min(p[1]).min(p[2]));
                 most = most.max(i32::from(hi) - i32::from(lo));
@@ -1900,7 +1892,8 @@ fn a_not_installed_card_is_grey_until_the_pointer_is_over_it() {
         }
         most
     };
-    assert!(colour(&mut h) <= 8, "a not installed app's icon is grey");
+    let grey = colour(&mut h);
+    assert!(grey <= 8, "a not installed app's icon is grey: {grey}");
     h.hover_at(egui::pos2(icon.center().x + 120.0, icon.center().y + 60.0));
     // The colour picture decodes on a background thread: give it real time, as a slow machine
     // (CI's Windows runner) needs more than a few frames.
@@ -1908,12 +1901,13 @@ fn a_not_installed_card_is_grey_until_the_pointer_is_over_it() {
     for _ in 0..100 {
         h.run_steps(2);
         shown = colour(&mut h);
-        if shown > 40 {
+        if shown > 20 {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
-    assert!(shown > 40, "the icon shows its colour under the pointer");
+    // UniPlanner's icon is a muted green: clearly coloured, if not vivid.
+    assert!(shown > 20, "the icon shows its colour under the pointer: {shown}");
     h.hover_at(egui::pos2(5.0, 400.0));
     h.run_steps(8);
     assert!(colour(&mut h) <= 8, "the colour goes again when the pointer leaves");
@@ -1943,11 +1937,14 @@ fn the_sort_offers_name_both_ways_recently_updated_and_frequently_used() {
 #[test]
 fn opening_an_app_counts_and_frequently_used_puts_the_most_opened_first() {
     use artcraft_launcher_ui_egui::settings::SortKey;
-    let (mut h, sent) = harness(ViewMode::Grid, egui::Theme::Dark, true);
+    // Both up to date, so both offer Open.
+    let mut ev = events();
+    ev.push(detected("unitexto", Some("0.5.0")));
+    let (mut h, sent) = harness_with(ev, ViewMode::Grid, egui::Theme::Dark, true, 1.0);
     h.run_steps(6);
     h.state_mut().as_mut().unwrap().settings.sort = SortKey::Frequent;
     h.run_steps(4);
-    // Installed apps in name order: Effect (updates), Light (Open), Photo (updates), Word (Open).
+    // Never opened yet, so in the catalog's order: UniTexto, UniPlanner.
     let opens: Vec<_> = h.get_all_by_label("Open").collect();
     assert_eq!(opens.len(), 2);
     opens[1].click(); // UniPlanner
@@ -1955,9 +1952,9 @@ fn opening_an_app_counts_and_frequently_used_puts_the_most_opened_first() {
     assert!(sent.borrow().contains(&Command::Launch { app: "uniplanner".into() }));
     assert_eq!(h.state().as_ref().unwrap().settings.launches.get("uniplanner"), Some(&1));
     h.run_steps(4);
-    let word = h.get_by_label("UniPlanner details").rect();
-    let light = h.get_by_label("LightCraft details").rect();
-    assert!(word.min.y < light.min.y || (word.min.y == light.min.y && word.min.x < light.min.x), "{word:?} {light:?}");
+    let planner = h.get_by_label("UniPlanner details").rect();
+    let texto = h.get_by_label("UniTexto details").rect();
+    assert!(planner.min.y < texto.min.y || (planner.min.y == texto.min.y && planner.min.x < texto.min.x), "{planner:?} {texto:?}");
 }
 
 #[test]
@@ -1973,10 +1970,11 @@ fn an_apps_page_is_a_card_in_the_middle_with_next_and_previous_arrows_and_closes
     // A card with a margin of window all round, not a panel against one edge.
     let close = h.get_by_label("Close (Esc)").rect();
     assert!(close.right() < 1180.0 - 24.0 && close.left() > 24.0, "{close:?}");
-    // Next goes to the following app in the grid's order (Word after Photo), and back again.
+    // Next goes to the following app in the grid's order (UniPDF, not installed, after the
+    // installed ones), and back again.
     h.get_by_label("Next app").click();
     h.run_steps(12);
-    assert!(showing(&h, "uniplanner"));
+    assert!(showing(&h, "unipdf"));
     h.get_by_label("Previous app").click();
     h.run_steps(12);
     assert!(showing(&h, "unitexto"));

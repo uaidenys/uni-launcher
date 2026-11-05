@@ -102,16 +102,16 @@ mod tests {
     #[test]
     fn reads_each_package_managers_listing() {
         assert_eq!(
-            parse_dpkg("unitexto|installed|0.5.0-1\nphotocraft:amd64|installed|0.6.0-1\nwordcraft|config-files|0.3.0-1\n"),
+            parse_dpkg("unitexto|installed|0.5.0-1\nunitexto:amd64|installed|0.6.0-1\nuniplanner|config-files|0.3.0-1\n"),
             [("unitexto".into(), "0.5.0-1".into()), ("unitexto".into(), "0.6.0-1".into())]
         );
-        assert_eq!(parse_rpm("gridcraft|0.3.0\n"), [("gridcraft".into(), "0.3.0".into())]);
+        assert_eq!(parse_rpm("uniplanner|0.3.0\n"), [("uniplanner".into(), "0.3.0".into())]);
         assert_eq!(parse_pacman("unitexto-bin 0.5.0-1\nlinux 6.11.1.arch1-1\n").len(), 2);
         assert_eq!(
-            parse_flatpak_list("ai.storyteller.uniplanner\t\nai.storyteller.cadcraft\t0.3.0\n"),
-            [("ai.storyteller.uniplanner".into(), String::new()), ("ai.storyteller.cadcraft".into(), "0.3.0".into())]
+            parse_flatpak_list("ai.storyteller.uniplanner\t\nai.storyteller.unitexto\t0.3.0\n"),
+            [("ai.storyteller.uniplanner".into(), String::new()), ("ai.storyteller.unitexto".into(), "0.3.0".into())]
         );
-        let info = "\nWordCraft - Word processor\n\n          ID: ai.storyteller.uniplanner\n     Version: 0.3.0\n      Branch: master\n";
+        let info = "\nUniPlanner - Spreadsheets\n\n          ID: ai.storyteller.uniplanner\n     Version: 0.3.0\n      Branch: master\n";
         assert_eq!(parse_flatpak_info(info).as_deref(), Some("0.3.0"));
         assert_eq!(parse_flatpak_info("Version: \n"), None);
     }
@@ -136,14 +136,15 @@ mod tests {
     #[test]
     fn finds_aur_packages_in_every_flavour() {
         let photo = CraftApp::by_id("unitexto").unwrap();
-        let pdf = CraftApp::by_id("pdfcraft").unwrap();
+        // An app that shipped under another name before.
+        let pdf = &CraftApp { id: "unipdf", name: "UniPDF", former_ids: &["pdfcraft"], former_names: &["PdfCraft"], ..*photo };
         let installed =
-            pkgs(InstallSource::Pacman, parse_pacman("linux 6.11.1.arch1-1\nphotocraft-git 0.3.0.r47.g47f9306-1\nprintcraft-bin 0.2.1-1\n"));
+            pkgs(InstallSource::Pacman, parse_pacman("linux 6.11.1.arch1-1\nunitexto-git 0.3.0.r47.g47f9306-1\npdfcraft-bin 0.2.1-1\n"));
         let hit = find(photo, &installed, &[InstallSource::Pacman]).unwrap();
         assert_eq!(hit.name, "unitexto-git");
         assert_eq!(version_of(hit).unwrap().to_string(), "0.3.0");
-        // PdfCraft under its old name.
-        assert_eq!(find(pdf, &installed, &[InstallSource::Pacman]).unwrap().name, "printcraft-bin");
+        // UniPDF under its old name.
+        assert_eq!(find(pdf, &installed, &[InstallSource::Pacman]).unwrap().name, "pdfcraft-bin");
         assert!(find(CraftApp::by_id("uniplanner").unwrap(), &installed, &[InstallSource::Pacman]).is_none());
     }
 

@@ -67,12 +67,13 @@ fn release(id: &str, v: &str, at: i64) -> Release {
     }
 }
 
-fn events() -> Vec<Event> {
+/// The table shows the up-to-date app at rest; the grid shows it re-verifying a download.
+fn events(view: ViewMode) -> Vec<Event> {
     let mut ev = Vec::new();
     for (i, app) in SUITE.iter().enumerate() {
         let latest = LatestRelease::Found(release(app.id, "0.5.0", NOW - 40 * 86_400 - i as i64 * 600));
         ev.push(Event::Latest { app: app.id.into(), latest, from: Origin::ArtCraftApi });
-        let installed = matches!(app.id, "unitexto" | "lightcraft").then(|| Installed {
+        let installed = matches!(app.id, "unitexto" | "uniplanner").then(|| Installed {
             version: version::parse(if app.id == "unitexto" { "0.4.1" } else { "0.5.0" }),
             source: InstallSource::MacApp,
             location: format!("/Applications/{}.app", app.name),
@@ -80,10 +81,12 @@ fn events() -> Vec<Event> {
         });
         ev.push(Event::Detected { app: app.id.into(), installed });
     }
-    ev.push(Event::Progress { app: "filmcraft".into(), phase: JobPhase::Verifying });
     ev.push(Event::CheckFinished { at: NOW - 180, source: Source::Feed, rate_limited_until: None });
     // A backend message, translated through its `@msg` template where it's shown.
-    ev.push(Event::JobFinished { app: "lightcraft".into(), result: Ok("LightCraft updated to 0.5.0".into()) });
+    ev.push(Event::JobFinished { app: "uniplanner".into(), result: Ok("UniPlanner updated to 0.5.0".into()) });
+    if matches!(view, ViewMode::Grid) {
+        ev.push(Event::Progress { app: "uniplanner".into(), phase: JobPhase::Verifying });
+    }
     ev
 }
 
@@ -93,7 +96,7 @@ fn harness(view: ViewMode) -> Harness<'static, Option<LauncherUi>> {
 
 fn harness_on(view: ViewMode, os: Os) -> Harness<'static, Option<LauncherUi>> {
     artcraft_launcher_ui_egui::i18n::set_test_lang(artcraft_launcher_ui_egui::i18n::Lang::EN);
-    let mut backend = Some(Fake { events: events(), clock: Rc::new(Cell::new(NOW)), os });
+    let mut backend = Some(Fake { events: events(view), clock: Rc::new(Cell::new(NOW)), os });
     let settings =
         Settings { view, notify: false, language: "hu".into(), theme: artcraft_launcher_ui_egui::theme::ThemeChoice::Dark, ..Settings::default() };
     Harness::builder().with_size(egui::vec2(1180.0, 900.0)).with_theme(egui::Theme::Dark).build_ui_state(
@@ -127,11 +130,11 @@ fn hungarian_ui_translates_labels_dates_and_messages() {
     // Product names stay in English.
     assert!(h.query_by_label("Launcher").is_none());
     h.get_by_label("Uniphar Indústria Farmacêutica");
-    h.get_by_label("Képszerkesztés");
+    h.get_by_label("Írás és dokumentumtervezés");
     h.get_by_label("Frissítés: 0.5.0");
     h.get_by_label_contains("Ellenőrzőösszeg ellenőrzése…");
     h.get_by_label_contains("Ellenőrizve: 3 perce · Uniphar API");
-    h.get_by_label("LightCraft frissítve. Verzió: 0.5.0");
+    h.get_by_label("UniPlanner frissítve. Verzió: 0.5.0");
 
     let mut table = harness(ViewMode::Table);
     table.run_steps(8);
@@ -164,18 +167,18 @@ fn check_settings_layout() {
         h.run_steps(8);
         let theme = h.get_by_label("Rendszerbeállítás szerint").rect();
         assert!(theme.bottom() < done.top(), "appearance controls must scroll above the fixed actions");
-        h.get_by_label("Csatlakozás a Discordhoz").scroll_to_me();
-        h.run_steps(8);
         // The footer has the same services, and the cards behind the modal have Webhely and GitHub
         // links as one 14px line of text; keep only the settings body's buttons (34px) and icons (24px).
-        let discord = h.get_by_label("Csatlakozás a Discordhoz").rect();
-        assert!(screen.contains_rect(discord), "community links must be reachable by scrolling");
-        let mut links = vec![discord];
-        for label in ["Webhely", "GitHub", "X", "Instagram", "LinkedIn", "YouTube", "TikTok"] {
+        h.query_all_by_label("Webhely").rfind(|n| n.rect().height() > 30.0).unwrap().scroll_to_me();
+        h.run_steps(8);
+        let website = h.query_all_by_label("Webhely").map(|n| n.rect()).rfind(|r| r.height() > 30.0).unwrap();
+        assert!(screen.contains_rect(website), "community links must be reachable by scrolling");
+        let mut links = vec![website];
+        for label in ["GitHub", "Instagram", "Facebook", "LinkedIn"] {
             let candidates: Vec<_> = h
                 .query_all_by_label(label)
                 .map(|n| n.rect())
-                .filter(|r| r.top() >= discord.top() - 1.0 && r.bottom() < done.top() && r.height() > 20.0)
+                .filter(|r| r.top() >= website.top() - 1.0 && r.bottom() < done.top() && r.height() > 20.0)
                 .collect();
             assert_eq!(candidates.len(), 1, "{width}x{height}: settings link {label}: {candidates:?}");
             links.extend(candidates);

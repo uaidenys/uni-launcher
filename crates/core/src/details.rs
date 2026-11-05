@@ -21,6 +21,7 @@ pub struct Shot {
     pub caption: &'static str,
 }
 
+#[cfg_attr(not(test), allow(dead_code))] // For the pages' pictures, once they are published.
 const fn shot(key: &'static str, caption: &'static str) -> Shot {
     Shot { key, caption }
 }
@@ -67,7 +68,7 @@ pub fn looks_like_jpeg(bytes: &[u8]) -> bool {
 /// Where the Uni apps are shipped: Windows installers.
 const PLATFORMS: &str = "Windows";
 
-pub const DETAILS: [AppDetails; 2] = [
+pub const DETAILS: [AppDetails; 3] = [
     AppDetails {
         id: "unitexto",
         headline: "The familiar word processor, native and offline.",
@@ -107,6 +108,20 @@ pub const DETAILS: [AppDetails; 2] = [
                 "A dependency-graph calculation engine with dynamic arrays, LET and LAMBDA, structured table references, sort, AutoFilter and Flash Fill.",
             ),
             feature("Fast", "Copy-on-write workbooks, incremental recalculation and a grid that only lays out what is on screen."),
+        ],
+        shots: &[],
+        platforms: PLATFORMS,
+    },
+    AppDetails {
+        id: "unipdf",
+        headline: "The PDF workbench, native and offline.",
+        about: "A PDF reader and editor written in Rust. Read, organize, combine, split and secure PDFs in a fast, \
+                native app, with no account and no telemetry.",
+        features: &[
+            feature("Read", "Fast, accurate rendering, with search as you type and text you can select and copy."),
+            feature("Organize", "Reorder, rotate, insert and delete pages, and combine or split documents."),
+            feature("Secure", "Protect documents with a password and choose what readers may do with them."),
+            feature("Convert", "Export to Word and Excel, and recognise the text of scanned pages with Windows OCR."),
         ],
         shots: &[],
         platforms: PLATFORMS,

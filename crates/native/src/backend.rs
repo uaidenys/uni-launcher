@@ -683,11 +683,16 @@ struct Fallback {
 ///   apps the feed doesn't list or hasn't refreshed in a day, or once the feed has seriously
 ///   failed (several checks in a row and an hour without an answer); then hourly per app.
 fn feed_and_fallback(http: &Http, paths: &Paths, shared: &Shared) -> (Option<Feed>, Fallback) {
-    let saved = load_feed(paths);
     let loaded = shared.loaded.load(Ordering::SeqCst);
+    // The Uni apps have no feed of their own (ArtCraft's doesn't list them): GitHub alone.
+    let Some(url) = feed_url() else {
+        let github_every = if loaded { GITHUB_FALLBACK_EVERY } else { EARLY_GITHUB_EVERY };
+        return (None, Fallback { trust_feed: false, github_every });
+    };
+    let saved = load_feed(paths);
     let first_time = !loaded && saved.is_none();
     let attempts = if first_time { 1 } else { FEED_ATTEMPTS };
-    let fetched = fetch_feed(http, paths, &feed_url(), &shared.feed_throttle, attempts);
+    let fetched = fetch_feed(http, paths, &url, &shared.feed_throttle, attempts);
     let now = crate::now();
     let (fresh, answered, failures) = {
         let mut failures = shared.feed_failures.lock().unwrap_or_else(PoisonError::into_inner);
@@ -832,13 +837,10 @@ fn fetch_feed(http: &Http, paths: &Paths, url: &str, throttle: &Mutex<FeedThrott
     if asked { FeedFetch::Failed } else { FeedFetch::Held }
 }
 
-/// The feed's address. `ARTCRAFT_LAUNCHER_FEED_URL` points at a staging server or a local copy
-/// (only `https://`, or plain `http://` on localhost).
-fn feed_url() -> String {
-    std::env::var("ARTCRAFT_LAUNCHER_FEED_URL")
-        .ok()
-        .filter(|u| u.starts_with("https://") || is_loopback(u))
-        .unwrap_or_else(|| artcraft_launcher_core::feed::FEED_URL.to_string())
+/// The feed's address, if any: only `ARTCRAFT_LAUNCHER_FEED_URL` (`https://`, or plain `http://`
+/// on localhost) names one. There is no default: ArtCraft's feed doesn't list the Uni apps.
+fn feed_url() -> Option<String> {
+    std::env::var("ARTCRAFT_LAUNCHER_FEED_URL").ok().filter(|u| u.starts_with("https://") || is_loopback(u))
 }
 
 /// `http://<loopback host>:<port>` and an optional path: the host must be exactly 127.0.0.1,
