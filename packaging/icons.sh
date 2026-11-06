@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Regenerate every app and tray icon from the ArtCraft "A" mark in docs/brand/, rendered exactly as
-# supplied. The mark is an ArtCraft trademark, NOT MIT/Apache: docs/brand/LICENSE-brand.txt.
+# Regenerate every app and tray icon from the Uni Launcher mark in docs/brand/, rendered exactly as
+# supplied. The mark belongs to Uniphar, NOT MIT/Apache: docs/brand/LICENSE-brand.txt.
 #
 # - App icon (Dock, taskbar, Start menu, Linux menus, installers): the blue mark, which is also
 #   getartcraft.com's favicon.

@@ -1,5 +1,8 @@
 # macOS DMG window
 
+> The background (background.svg, background.tiff) carried the ArtCraft mark and was removed for
+> the Uni Launcher; until a Uni background is drawn, the DMG opens on a plain Finder window.
+
 What Finder shows when the DMG opens: a 660 × 400 pt background with the app icon and the
 `Applications` link side by side, laid out like the other Craft apps' DMGs. `package.sh` copies
 these files into the image; nothing here is generated at build time, so the DMG builds with a plain
@@ -7,8 +10,6 @@ these files into the image; nothing here is generated at build time, so the DMG 
 
 | File | What |
 |---|---|
-| `background.svg` | Source of the background: the ArtCraft mark in black (`docs/brand/artcraft-mark-black.svg`, linked, not copied) whole on the mark's blue (`#4e7bfb`), Ink and Paper. The mark is a trademark: it stays exactly as supplied, never cropped or recoloured (`docs/brand/LICENSE-brand.txt`), unlike the cropped icons on the other apps' DMGs. Its text (Inter, Geist Mono from `assets/fonts`) is outlined, so rendering it needs no fonts. No paper grain: noise doesn't compress, and this keeps `background.tiff` small. |
-| `background.tiff` | The background at 1x (660 × 400 px, 72 dpi) and 2x (1320 × 800 px, 144 dpi) in one HiDPI TIFF (16-colour palette, Deflate, sRGB). Goes to `.background/background.tiff`. |
 | `dmg-layout.DS_Store` | Finder's view settings for the volume: window size, icon size 128, ArtCraft Launcher.app at (326, 205), `Applications` at (574, 205), and the background. Goes to `.DS_Store` in the image; named so it isn't mistaken for (or ignored like) a Finder-generated `.DS_Store`. |
 | `generate.py` | Writes `background.tiff` and `dmg-layout.DS_Store` from the SVG and the layout above. |
 

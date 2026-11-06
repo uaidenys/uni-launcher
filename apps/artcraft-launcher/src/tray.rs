@@ -27,7 +27,7 @@ pub struct Tray {
 }
 
 fn load_icon() -> Result<tray_icon::Icon, String> {
-    // The Uni Launcher "A" mark (an Uni Launcher trademark, not MIT/Apache: docs/brand/LICENSE-brand.txt).
+    // The Uni Launcher mark (a Uniphar mark, not MIT/Apache: docs/brand/LICENSE-brand.txt).
     // macOS tints the black mark to the menu bar's colours as a template image; elsewhere the
     // blue mark is shown as supplied.
     let bytes: &[u8] = if cfg!(target_os = "macos") {

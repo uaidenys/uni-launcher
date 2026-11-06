@@ -1,14 +1,18 @@
+Uni Launcher
+Copyright (c) 2026 Denys Rodrigues de Oliveira - Uniphar Indústria Farmacêutica.
+Uni Launcher is a modified version of ArtCraft Launcher. Licensed under the MIT License or the
+Apache License, Version 2.0, at your option (LICENSE-MIT, LICENSE-APACHE).
+
+The Uni and Uniphar names, the app icons (assets/app-icon/, assets/app-icons/uni*.png) and the
+marks in docs/brand/ belong to Uniphar Indústria Farmacêutica. They are NOT open source and are
+NOT covered by the MIT or Apache-2.0 license; their terms are in docs/brand/LICENSE-brand.txt, and
+modified versions must remove them.
+
+Original notice (kept as the MIT and Apache-2.0 licenses require):
+
 ArtCraft Launcher
 Copyright (c) 2026 ArtCraft Team and the ArtCraft Launcher contributors.
-Licensed under the MIT License or the Apache License, Version 2.0, at your option
-(LICENSE-MIT, LICENSE-APACHE).
-
-The ArtCraft name, wordmark, logo and "A" mark (docs/brand/) are trademarks of the ArtCraft Team.
-They are NOT open source and are NOT covered by the MIT or Apache-2.0 license above. This includes
-everywhere ArtCraft Launcher shows them: the app icon (assets/app-icon/, the blue "A" mark), the
-ArtCraft logo in the window header and the "A" mark used as the tray / menu-bar icon
-(docs/brand/artcraft-mark-64.png, artcraft-mark-black-44.png).
-Their terms are in docs/brand/LICENSE-brand.txt; forks and modified versions must remove them.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option.
 
 Third-party material
 

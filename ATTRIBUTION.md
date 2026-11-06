@@ -1,7 +1,7 @@
 # Attribution
 
-Every non-code asset in this repository, with its author, source and license. ArtCraft
-Launcher's own code and original assets are MIT OR Apache-2.0 (see [`LICENSE-MIT`](LICENSE-MIT),
+Every non-code asset in this repository, with its author, source and license. Uni
+Launcher's code is MIT OR Apache-2.0 and its marks are Uniphar's (`docs/brand/LICENSE-brand.txt`) (see [`LICENSE-MIT`](LICENSE-MIT),
 [`LICENSE-APACHE`](LICENSE-APACHE) and [`NOTICE`](NOTICE)). When you add an asset, add a row here
 in the same change; third-party assets must be permissively licensed and keep their license file
 next to them.
@@ -10,20 +10,22 @@ next to them.
 
 | Path | Title | Author | Source | License |
 |---|---|---|---|---|
-| `assets/app-icon/` (all files) | ArtCraft Launcher app icon: the ArtCraft "A" mark in blue (getartcraft.com's favicon) | ArtCraft Team | Rendered unmodified from `docs/brand/artcraft-mark.svg` by `packaging/icons.sh`, see [`assets/app-icon/README.md`](assets/app-icon/README.md) | **Not open source; not MIT or Apache-2.0.** ArtCraft trademark, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
-| `packaging/macos/dmg/` (all files) | macOS DMG window background and layout | ArtCraft Launcher contributors, with the ArtCraft mark | Original work, see [`packaging/macos/dmg/README.md`](packaging/macos/dmg/README.md); the mark is `docs/brand/artcraft-mark-black.svg`, linked from `background.svg` and rendered unmodified into `background.tiff` | MIT OR Apache-2.0, like the code; the ArtCraft mark in it stays an ArtCraft trademark ([`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt)). The TIFF carries LittleCMS's built-in sRGB profile ("No copyright, use freely") |
-| `assets/social/linkedin.svg` | LinkedIn logo, linking to ArtCraft's company page | Fonticons, Inc. ([Font Awesome Free](https://fontawesome.com) 6.7.2) | Font Awesome Free `svgs/brands/linkedin.svg`; white fill and a square view box, see [`assets/social/README.md`](assets/social/README.md) | CC BY 4.0. The logo is a trademark of LinkedIn Corporation. |
-| `assets/social/x.svg`, `youtube.svg`, `tiktok.svg`, `instagram.svg`, `discord.svg` | X, YouTube, TikTok, Instagram and Discord logos, linking to ArtCraft's accounts | [Simple Icons](https://simpleicons.org/) contributors | Simple Icons, `fill` set to white for tinting; see [`assets/social/README.md`](assets/social/README.md) | CC0 1.0. The logos are trademarks of X Corp., Google LLC, TikTok / ByteDance, Meta Platforms, Inc. and Discord Inc. |
-| `assets/social/github.svg`, `assets/social/globe.svg` | GitHub logo (linking to ArtCraft's GitHub) and a globe (linking to ArtCraft's website) | [Simple Icons](https://simpleicons.org/) contributors; [Lucide](https://lucide.dev) contributors | Simple Icons `github.svg` and Lucide `globe.svg` (lucide-static 0.468.0), white for tinting; see [`assets/social/README.md`](assets/social/README.md) | CC0 1.0 (GitHub logo; a trademark of GitHub, Inc.); ISC (globe) |
-| `docs/screenshots/artcraft-launcher-grid.png`, `artcraft-launcher-table.png` | Screenshots of ArtCraft Launcher (macOS: grid view in dark theme, table view in light theme), used in the README | ArtCraft Launcher contributors | Captured from the app | MIT OR Apache-2.0 for the screenshot itself; the ArtCraft logo in it stays an ArtCraft trademark ([`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt)) and the app icons in it keep their own licenses (above) |
+| `assets/app-icon/` (all files) | Uni Launcher app icon | Denys Rodrigues de Oliveira (Uniphar Indústria Farmacêutica) | Rendered from `docs/brand/unitexto-mark.svg` by `packaging/icons.sh` | **Uniphar mark, all rights reserved; not MIT or Apache**, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
+| `packaging/macos/dmg/` (all files) | macOS DMG window layout | ArtCraft Launcher contributors | Original work, see [`packaging/macos/dmg/README.md`](packaging/macos/dmg/README.md) (its ArtCraft background was removed) | MIT OR Apache-2.0 |
+| `assets/social/linkedin.svg` | LinkedIn logo, linking to Uniphar's company page | Fonticons, Inc. ([Font Awesome Free](https://fontawesome.com) 6.7.2) | Font Awesome Free `svgs/brands/linkedin.svg`; white fill and a square view box, see [`assets/social/README.md`](assets/social/README.md) | CC BY 4.0. The logo is a trademark of LinkedIn Corporation. |
+| `assets/social/x.svg`, `youtube.svg`, `tiktok.svg`, `instagram.svg` | X, YouTube, TikTok and Instagram logos, linking to Uniphar's accounts | [Simple Icons](https://simpleicons.org/) contributors | Simple Icons, `fill` set to white for tinting; see [`assets/social/README.md`](assets/social/README.md) | CC0 1.0. The logos are trademarks of X Corp., Google LLC, TikTok / ByteDance, Meta Platforms, Inc. and Discord Inc. |
+| `assets/social/github.svg`, `assets/social/globe.svg` | GitHub logo (linking to the Uni apps' GitHub) and a globe (linking to Uniphar's website) | [Simple Icons](https://simpleicons.org/) contributors; [Lucide](https://lucide.dev) contributors | Simple Icons `github.svg` and Lucide `globe.svg` (lucide-static 0.468.0), white for tinting; see [`assets/social/README.md`](assets/social/README.md) | CC0 1.0 (GitHub logo; a trademark of GitHub, Inc.); ISC (globe) |
 | (not bundled) the pictures on each app's details page | Screenshots of the Craft Apps, fetched when a page is opened and kept in the launcher's cache folder | The apps' contributors | [storytold/craft-launcher-assets](https://github.com/storytold/craft-launcher-assets), pinned to a tag (`SCREENSHOTS_REV` in `crates/core/src/details.rs`); each picture's source and license are listed in that repository's `ATTRIBUTION.md` | Each app's own license for the interface (MIT OR Apache-2.0); the work shown in them is public domain or made in the app, as that file says |
-| `docs/brand/artcraft-logo.svg`, `artcraft-logo-white.svg` | ArtCraft wordmark, shown in the window header | ArtCraft Team | Supplied brand files, unmodified (same as PhotoCraft's `docs/brand/`) | **Not open source; not MIT or Apache-2.0.** ArtCraft trademark, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
-| `docs/brand/artcraft-mark-64.png`, `artcraft-mark-black-44.png` | ArtCraft "A" mark, the tray / menu-bar icon | ArtCraft Team | Rendered unmodified from `docs/brand/artcraft-mark.svg` and `artcraft-mark-black.svg` by `packaging/icons.sh` | **Not open source; not MIT or Apache-2.0.** ArtCraft trademark, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
+| `docs/brand/artcraft-mark-64.png`, `artcraft-mark-black-44.png` | Uni Launcher mark, the tray icon (file names kept from upstream) | Denys Rodrigues de Oliveira (Uniphar Indústria Farmacêutica) | Rendered from `docs/brand/unitexto-mark.svg` and `unitexto-mark-black.svg` by `packaging/icons.sh` | **Uniphar mark, all rights reserved**, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
 | `assets/fonts/Inter-Variable.ttf` | Inter 4.001, variable (body text) | The Inter Project Authors (Rasmus Andersson) | Google Fonts, <https://github.com/google/fonts/tree/main/ofl/inter> (`Inter[opsz,wght].ttf`, renamed) | SIL OFL 1.1, [`assets/fonts/OFL-Inter.txt`](assets/fonts/OFL-Inter.txt) |
 | `assets/fonts/Archivo-Variable.ttf` | Archivo 2.001, variable (headings and app names) | The Archivo Project Authors (Omnibus-Type) | Google Fonts, <https://github.com/google/fonts/tree/main/ofl/archivo> (`Archivo[wdth,wght].ttf`, renamed) | SIL OFL 1.1, [`assets/fonts/OFL-Archivo.txt`](assets/fonts/OFL-Archivo.txt) |
 | `assets/fonts/GeistMono-Variable.ttf` | Geist Mono 1.701, variable (labels and buttons) | The Geist Project Authors (Vercel) | Google Fonts, <https://github.com/google/fonts/tree/main/ofl/geistmono> (`GeistMono[wght].ttf`, renamed) | SIL OFL 1.1, [`assets/fonts/OFL-GeistMono.txt`](assets/fonts/OFL-GeistMono.txt) |
 
-### Craft App Suite icons
+### App icons
+
+The Uni apps' icons (`unitexto.png`, `unipdf.png`, `uniplanner.png`) are Uniphar marks, all rights
+reserved ([`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt)). The others below are
+ArtCraft's apps' icons, kept from upstream:
 
 The launcher shows each Craft app with that app's own icon. They are copied unmodified from each
 app's repository; their designs belong to the ArtCraft Team and each app's contributors and are
@@ -49,5 +51,4 @@ licensed like those apps. Refresh them from the source path, never redraw them.
 
 | Path | Title | Author | Source | License |
 |---|---|---|---|---|
-| `docs/brand/` (all files) | ArtCraft name, wordmark and mark | ArtCraft Team | getartcraft.com (via `craftrules/assets/brand/`) | Not open source; trademarks of the ArtCraft Team, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
-| README app icons (linked, not copied) | Each Craft app's 64 px icon | ArtCraft Team and each app's contributors | `raw.githubusercontent.com/storytold/<app>/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.<app>.png` | MIT OR Apache-2.0 (each app's license) |
+| `docs/brand/` (all files) | Uni Launcher marks | Denys Rodrigues de Oliveira (Uniphar Indústria Farmacêutica) | Original | **Uniphar marks, all rights reserved; not MIT or Apache**, [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt) |
